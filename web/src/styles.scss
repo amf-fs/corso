@@ -41,5 +41,11 @@ $corso-theme: mat.define-theme((
 @tailwind components;
 @tailwind utilities;
 
+/* Override Tailwind's border-style for all elements initially */
+//This was causing a conflict with outline appearance from angular material
+*, ::before, ::after {
+  border-style: none;
+}
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

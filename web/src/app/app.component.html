@@ -2,18 +2,27 @@
   <div class="account-list w-1/2 p-4">
     <span>list of accounts will go here</span>
   </div>
-  <div class="action-panel w-1/2 p-4 flex flex-col">
+  <div class="action-panel w-1/2 p-4 flex flex-col gap-4">
     <mat-form-field appearance="outline">
       <mat-icon matPrefix>account_circle</mat-icon>
-      <input matInput placeholder="New account"/>
+      <input matInput placeholder="New account" [formControl]="accountNameControl"/>
+      @if (accountNameControl.invalid){
+        <mat-error>You must identify this account.</mat-error>
+      }
     </mat-form-field>
     <mat-form-field>
       <mat-label>username</mat-label>
-      <input matInput placeholder="user@example.com"/>
+      <input matInput placeholder="user@example.com" [formControl]="usernameControl"/>
+      @if (usernameControl.invalid){
+        <mat-error>You must enter a username.</mat-error>
+      }
     </mat-form-field>
     <mat-form-field>
       <mat-label>password</mat-label>
-      <input matInput type="password"/>
+      <input matInput type="password" [formControl]="passwordControl"/>
+      @if (passwordControl.invalid){
+        <mat-error>You must enter a password.</mat-error>
+      }
     </mat-form-field>
     <div class="flex justify-end">
       <button mat-stroked-button class="w-1/4"> 

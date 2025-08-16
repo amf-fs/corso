@@ -1,4 +1,4 @@
-import { Component, computed, signal, WritableSignal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,7 +6,7 @@ import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/mat
 import { MatInputModule } from '@angular/material/input';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Account } from './app.model';
-import { MatListModule } from '@angular/material/list';
+import { MatListModule, MatSelectionListChange } from '@angular/material/list';
 
 @Component({
   selector: 'app-root',
@@ -26,7 +26,6 @@ import { MatListModule } from '@angular/material/list';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  
   accountNameControl = new FormControl('', Validators.required);
   usernameControl = new FormControl('', [Validators.required]);
   passwordControl = new FormControl('', [Validators.required]);
@@ -54,13 +53,23 @@ export class AppComponent {
     this.searchTerm.set((target as HTMLInputElement).value);
   }
 
+  onListOptionClick(event: MatSelectionListChange) {
+    const selectedAccount = event.options[0]?.value as Account;
+    
+    if (selectedAccount) {
+      this.accountNameControl.setValue(selectedAccount.name);
+      this.usernameControl.setValue(selectedAccount.username);
+      this.passwordControl.setValue(selectedAccount.password);
+    }
+  }
+
   filterBySearchTerm(): Account[] {
     const search = this.searchTerm().toLowerCase().trim();
-    
+
     if (!search) {
       return this.allAccounts();
     }
-    
+
     return this.allAccounts().filter(account =>
       account.name.toLowerCase().includes(search));
   }

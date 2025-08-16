@@ -4,15 +4,15 @@
       <mat-icon matPrefix>search</mat-icon>
       <input matInput placeholder="what are you looking for?" (input)="onSearchInput($event)"/>
     </mat-form-field>
-    <mat-list>
+    <mat-selection-list [multiple]="false" (selectionChange)="onListOptionClick($event)">
       <!--replace by id the track by the name can be edited-->
       @for (account of filteredAccounts(); track account.name)
       {
-        <mat-list-item>
+        <mat-list-option [value]="account">
           <mat-icon matListItemIcon>key_vertical</mat-icon>
           <div matListItemTitle>{{ account.name }}</div>
           <div matListItemLine>{{account.username}}</div>
-        </mat-list-item>
+        </mat-list-option>
         <mat-divider></mat-divider>
       }
       @empty {
@@ -23,7 +23,7 @@
           </span>
         </div>
       }
-    </mat-list>
+    </mat-selection-list>
   </div>
   <mat-divider [vertical]="true" class="h-full"></mat-divider>
   <div class="action-panel w-1/2 p-4 flex flex-col gap-4">

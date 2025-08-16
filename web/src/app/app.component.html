@@ -48,8 +48,12 @@
         <mat-error>You must enter a password.</mat-error>
       }
     </mat-form-field>
-    <div class="flex justify-end">
-      <button (click)="onSaveButtonClick()" mat-flat-button class="w-1/4"> 
+    <div class="flex justify-end gap-2">
+      <button (click)="onNewAccountButtonClick()" mat-button> 
+        <mat-icon>add</mat-icon>
+        New account
+      </button>
+      <button [disabled]="isFormInvalid()" (click)="onSaveButtonClick()" mat-flat-button> 
         Save
       </button>
     </div>

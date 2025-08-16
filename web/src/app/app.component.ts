@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,7 +6,7 @@ import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/mat
 import { MatInputModule } from '@angular/material/input';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Account } from './app.model';
-import { MatListModule, MatSelectionListChange } from '@angular/material/list';
+import { MatListModule, MatSelectionList, MatSelectionListChange } from '@angular/material/list';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +26,8 @@ import { MatListModule, MatSelectionListChange } from '@angular/material/list';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
+  @ViewChild(MatSelectionList) selectionList!: MatSelectionList;
+
   accountNameControl = new FormControl('', Validators.required);
   usernameControl = new FormControl('', [Validators.required]);
   passwordControl = new FormControl('', [Validators.required]);
@@ -33,6 +35,7 @@ export class AppComponent {
 
   private readonly searchTerm = signal<string>('');
   private readonly allAccounts = signal<Account[]>([]);
+  private selectedAccount: Account | null = null;
 
 
   onSaveButtonClick(): void {
@@ -44,9 +47,8 @@ export class AppComponent {
 
     this.allAccounts.update(accounts => [...accounts, account]);
 
-    this.accountNameControl.reset();
-    this.usernameControl.reset();
-    this.passwordControl.reset();
+    this.resetForm();
+
   }
 
   onSearchInput({ target }: Event): void {
@@ -54,13 +56,18 @@ export class AppComponent {
   }
 
   onListOptionClick(event: MatSelectionListChange) {
-    const selectedAccount = event.options[0]?.value as Account;
-    
-    if (selectedAccount) {
-      this.accountNameControl.setValue(selectedAccount.name);
-      this.usernameControl.setValue(selectedAccount.username);
-      this.passwordControl.setValue(selectedAccount.password);
+    this.selectedAccount = event.options[0]?.value as Account;
+
+    if (this.selectedAccount) {
+      this.accountNameControl.setValue(this.selectedAccount.name);
+      this.usernameControl.setValue(this.selectedAccount.username);
+      this.passwordControl.setValue(this.selectedAccount.password);
     }
+  }
+
+  onNewAccountButtonClick() {
+    this.resetForm();
+    this.selectionList?.deselectAll();
   }
 
   filterBySearchTerm(): Account[] {
@@ -72,6 +79,18 @@ export class AppComponent {
 
     return this.allAccounts().filter(account =>
       account.name.toLowerCase().includes(search));
+  }
+
+  isFormInvalid(): boolean {
+    return this.accountNameControl.invalid ||
+      this.usernameControl.invalid ||
+      this.passwordControl.invalid
+  }
+
+  private resetForm() {
+    this.accountNameControl.reset();
+    this.usernameControl.reset();
+    this.passwordControl.reset();
   }
 }
 

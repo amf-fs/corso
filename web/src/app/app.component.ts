@@ -1,4 +1,4 @@
-import { Component, signal, WritableSignal } from '@angular/core';
+import { Component, computed, signal, WritableSignal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,37 +12,58 @@ import { MatListModule } from '@angular/material/list';
   selector: 'app-root',
   standalone: true,
   imports: [
-    RouterOutlet, 
-    MatButtonModule, 
+    RouterOutlet,
+    MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule, 
+    MatIconModule,
     ReactiveFormsModule,
     MatListModule],
   providers: [
-    {provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' }}
+    { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
+  
   accountNameControl = new FormControl('', Validators.required);
   usernameControl = new FormControl('', [Validators.required]);
   passwordControl = new FormControl('', [Validators.required]);
+  filteredAccounts = computed(() => (this.filterBySearchTerm()));
 
-  accounts: WritableSignal<Account[]> = signal<Account[]>([]);
+  private readonly searchTerm = signal<string>('');
+  private readonly allAccounts = signal<Account[]>([]);
 
-  onSaveButtonClick(){
+
+  onSaveButtonClick(): void {
     const account: Account = {
       name: this.accountNameControl.value as string,
       username: this.usernameControl.value as string,
       password: this.passwordControl.value as string
-    } 
+    }
 
-    this.accounts.update(accounts => [...accounts, account]);
+    this.allAccounts.update(accounts => [...accounts, account]);
 
     this.accountNameControl.reset();
     this.usernameControl.reset();
     this.passwordControl.reset();
   }
+
+  onSearchInput({ target }: Event): void {
+    this.searchTerm.set((target as HTMLInputElement).value);
+  }
+
+  filterBySearchTerm(): Account[] {
+    const search = this.searchTerm().toLowerCase().trim();
+    
+    if (!search) {
+      return this.allAccounts();
+    }
+    
+    return this.allAccounts().filter(account =>
+      account.name.toLowerCase().includes(search));
+  }
 }
+
+

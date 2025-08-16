@@ -1,8 +1,12 @@
 <div class="flex flex-row w-full h-screen">
-  <div class="account-list w-1/2 p-4">
+  <div class="flex flex-col gap-2 w-1/2 p-4">
+    <mat-form-field>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput placeholder="what are you looking for?" (input)="onSearchInput($event)"/>
+    </mat-form-field>
     <mat-list>
       <!--replace by id the track by the name can be edited-->
-      @for (account of accounts(); track account.name)
+      @for (account of filteredAccounts(); track account.name)
       {
         <mat-list-item>
           <mat-icon matListItemIcon>key_vertical</mat-icon>
@@ -15,7 +19,7 @@
         <div class="flex flex-col items-center justify-center">
           <mat-icon class="text-6xl !w-16 !h-16">info</mat-icon>
           <span class="text-gray-600 text-lg">
-            Hey let's get started, by creating a new account on your right panel
+            Hey, I could not find any account, what if we create one at the action panel?
           </span>
         </div>
       }
@@ -23,7 +27,7 @@
   </div>
   <mat-divider [vertical]="true" class="h-full"></mat-divider>
   <div class="action-panel w-1/2 p-4 flex flex-col gap-4">
-    <mat-form-field appearance="outline">
+    <mat-form-field>
       <mat-icon matPrefix>account_circle</mat-icon>
       <input matInput placeholder="New account" [formControl]="accountNameControl"/>
       @if (accountNameControl.invalid){

@@ -4,9 +4,8 @@
       <mat-icon matPrefix>search</mat-icon>
       <input matInput placeholder="what are you looking for?" (input)="onSearchInput($event)"/>
     </mat-form-field>
-    <mat-selection-list [multiple]="false" (selectionChange)="onListOptionClick($event)">
-      <!--replace by id the track by the name can be edited-->
-      @for (account of filteredAccounts(); track account.name)
+    <mat-selection-list [multiple]="false" [(ngModel)]="selectedAccounts" (selectionChange)="onAccountListSelectionChange()">
+      @for (account of filteredAccounts(); track account.id)
       {
         <mat-list-option [value]="account">
           <mat-icon matListItemIcon>key_vertical</mat-icon>
@@ -26,25 +25,25 @@
     </mat-selection-list>
   </div>
   <mat-divider [vertical]="true" class="h-full"></mat-divider>
-  <div class="action-panel w-1/2 p-4 flex flex-col gap-4">
+  <div [formGroup]="accountForm" class="action-panel w-1/2 p-4 flex flex-col gap-4">
     <mat-form-field>
       <mat-icon matPrefix>account_circle</mat-icon>
-      <input matInput placeholder="New account" [formControl]="accountNameControl"/>
-      @if (accountNameControl.invalid){
+      <input matInput placeholder="New account" formControlName="accountName"/>
+      @if (accountNameControl?.invalid){
         <mat-error>You must identify this account.</mat-error>
       }
     </mat-form-field>
     <mat-form-field>
       <mat-label>username</mat-label>
-      <input matInput placeholder="user@example.com" [formControl]="usernameControl"/>
-      @if (usernameControl.invalid){
+      <input matInput placeholder="user@example.com" formControlName="username"/>
+      @if (usernameControl?.invalid){
         <mat-error>You must enter a username.</mat-error>
       }
     </mat-form-field>
     <mat-form-field>
       <mat-label>password</mat-label>
-      <input matInput type="password" [formControl]="passwordControl"/>
-      @if (passwordControl.invalid){
+      <input matInput type="password" formControlName="password"/>
+      @if (passwordControl?.invalid){
         <mat-error>You must enter a password.</mat-error>
       }
     </mat-form-field>

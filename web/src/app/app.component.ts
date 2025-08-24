@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Account } from './app.model';
 import { MatListModule, MatSelectionList } from '@angular/material/list';
+import { AccountFormComponent } from "./components/account-form/account-form.component";
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,9 @@ import { MatListModule, MatSelectionList } from '@angular/material/list';
     MatIconModule,
     ReactiveFormsModule,
     FormsModule,
-    MatListModule],
+    MatListModule,
+    AccountFormComponent
+  ],
   providers: [
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }
   ],
@@ -33,16 +36,8 @@ export class AppComponent {
   filteredAccounts = computed(() => (this.filterBySearchTerm()));
   selectedAccounts: Account[] = [];
 
-  get accountNameControl() {
-    return this.accountForm.get('accountName');
-  }
-
-  get usernameControl() {
-    return this.accountForm.get('username');
-  }
-
-  get passwordControl() {
-    return this.accountForm.get('password');
+  get selectedAccount(): Account | null {
+    return this.selectedAccounts.length === 0 ? null : this.selectedAccounts[0]
   }
 
   private readonly searchTerm = signal<string>('');
@@ -56,35 +51,28 @@ export class AppComponent {
     })
   }
 
-  onSaveButtonClick(): void {
-    const formValues: Account = {
-      id: this.selectedAccounts.length > 0 ? this.selectedAccounts[0].id : Math.floor(Math.random() * 1000) + 1,
-      name: this.accountNameControl?.value as string,
-      username: this.usernameControl?.value as string,
-      password: this.passwordControl?.value as string
-    };
+  onAccountCreated(newAccount: Account) {
+    this.allAccounts.update(accounts => [...accounts, newAccount]);
+    this.selectionList?.deselectAll();
+  }
 
-    if (this.selectedAccounts.length > 0) {
-      // Update existing account
-      this.allAccounts.update(accounts =>
-        accounts.map(account =>
-          account.id === this.selectedAccounts[0].id ? formValues : account
-        )
-      );
-    } else {
-      // Create new account
-      this.allAccounts.update(accounts => [...accounts, formValues]);
-    }
+  onAccountUpdated(updatedAccount: Account) {
+    this.allAccounts.update(accounts =>
+      accounts.map(account =>
+        account.id === this.selectedAccounts[0].id ? updatedAccount : account
+      )
+    );
 
-    this.reset();
+    this.selectionList?.deselectAll();
+  }
+
+  onNewAccountClicked() {
+    this.selectionList?.deselectAll();
+    this.selectedAccounts = [];
   }
 
   onSearchInput({ target }: Event): void {
     this.searchTerm.set((target as HTMLInputElement).value);
-  }
-
-  onNewAccountButtonClick() {
-    this.reset();
   }
 
   onAccountListSelectionChange() {
@@ -111,12 +99,6 @@ export class AppComponent {
 
   isFormInvalid(): boolean {
     return this.accountForm.invalid
-  }
-
-  private reset() {
-    this.accountForm.reset();
-    this.selectedAccounts = [];
-    this.selectionList?.deselectAll();
   }
 }
 

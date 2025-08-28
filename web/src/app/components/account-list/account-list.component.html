@@ -1,0 +1,26 @@
+<div class="flex flex-col gap-2 p-4">
+    <mat-form-field>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput placeholder="what are you looking for?" (input)="onSearchInput($event)" />
+    </mat-form-field>
+    <mat-selection-list [multiple]="false" [(ngModel)]="selectedAccounts"
+        (selectionChange)="onAccountListSelectionChange()">
+        @for (account of filteredAccounts(); track account.id)
+        {
+        <mat-list-option [value]="account">
+            <mat-icon matListItemIcon>key_vertical</mat-icon>
+            <div matListItemTitle>{{ account.name }}</div>
+            <div matListItemLine>{{account.username}}</div>
+        </mat-list-option>
+        <mat-divider></mat-divider>
+        }
+        @empty {
+        <div class="flex flex-col items-center justify-center">
+            <mat-icon class="text-6xl !w-16 !h-16">info</mat-icon>
+            <span class="text-gray-600 text-lg">
+                Hey, I could not find any account, let's create a new one?
+            </span>
+        </div>
+        }
+    </mat-selection-list>
+</div>

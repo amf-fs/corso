@@ -8,6 +8,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { Account } from './app.model';
 import { MatListModule, MatSelectionList } from '@angular/material/list';
 import { AccountFormComponent } from "./components/account-form/account-form.component";
+import { AccountListComponent } from './components/account-list/account-list.component';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +22,8 @@ import { AccountFormComponent } from "./components/account-form/account-form.com
     ReactiveFormsModule,
     FormsModule,
     MatListModule,
-    AccountFormComponent
+    AccountFormComponent,
+    AccountListComponent
   ],
   providers: [
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }

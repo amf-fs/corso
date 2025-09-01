@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, EventEmitter, input, Output, signal } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -20,33 +20,30 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './account-list.component.scss'
 })
 export class AccountListComponent {
+  @Output() accountSelectionChanged = new EventEmitter<Account>();
+
   filteredAccounts = computed(() => (this.filterBySearchTerm()));
   selectedAccounts: Account[] = [];
+  accounts = input<Account[]>([])
+
+  private readonly searchTerm = signal<string>('');
   
   onSearchInput({ target }: Event): void {
-    //this.searchTerm.set((target as HTMLInputElement).value);
+    this.searchTerm.set((target as HTMLInputElement).value);
   }
 
   onAccountListSelectionChange() {
-    // if (this.selectedAccounts) {
-    //   const account = this.selectedAccounts[0];
-    //   this.accountForm.patchValue({
-    //     accountName: account.name,
-    //     username: account.username,
-    //     password: account.password
-    //   });
-    // }
+    this.accountSelectionChanged.emit(this.selectedAccounts[0]);
   }
 
   private filterBySearchTerm(): Account[] {
-    return [];
-    // const search = this.searchTerm().toLowerCase().trim();
+    const search = this.searchTerm().toLowerCase().trim();
 
-    // if (!search) {
-    //   return this.allAccounts();
-    // }
+    if (!search) {
+      return this.accounts();
+    }
 
-    // return this.allAccounts().filter(account =>
-    //   account.name.toLowerCase().includes(search));
+    return this.accounts().filter(account =>
+      account.name.toLowerCase().includes(search));
   }
 }

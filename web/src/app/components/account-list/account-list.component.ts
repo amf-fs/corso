@@ -1,9 +1,9 @@
-import { Component, computed, EventEmitter, input, Output, signal } from '@angular/core';
+import { Component, computed, EventEmitter, input, Output, signal, ViewChild } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Account } from '../../app.model';
-import { MatListModule } from '@angular/material/list';
+import { MatListModule, MatSelectionList } from '@angular/material/list';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -20,6 +20,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './account-list.component.scss'
 })
 export class AccountListComponent {
+  @ViewChild(MatSelectionList) selectionList!: MatSelectionList;
   @Output() accountSelectionChanged = new EventEmitter<Account>();
 
   filteredAccounts = computed(() => (this.filterBySearchTerm()));
@@ -34,6 +35,10 @@ export class AccountListComponent {
 
   onAccountListSelectionChange() {
     this.accountSelectionChanged.emit(this.selectedAccounts[0]);
+  }
+
+  clearSelection() {
+    this.selectionList.deselectAll();
   }
 
   private filterBySearchTerm(): Account[] {

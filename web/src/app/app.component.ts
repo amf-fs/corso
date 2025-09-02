@@ -1,4 +1,4 @@
-import { Component, computed, signal, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,7 +6,7 @@ import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/mat
 import { MatInputModule } from '@angular/material/input';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Account } from './app.model';
-import { MatListModule, MatSelectionList } from '@angular/material/list';
+import { MatListModule } from '@angular/material/list';
 import { AccountFormComponent } from "./components/account-form/account-form.component";
 import { AccountListComponent } from './components/account-list/account-list.component';
 
@@ -32,11 +32,9 @@ import { AccountListComponent } from './components/account-list/account-list.com
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  @ViewChild(MatSelectionList) selectionList!: MatSelectionList;
+  @ViewChild(AccountListComponent) accountList!: AccountListComponent;
 
   accountForm: FormGroup
-  filteredAccounts = computed(() => (this.filterBySearchTerm()));
-  selectedAccounts: Account[] = [];
   allAccounts = signal<Account[]>([]);
 
   private _selectedAccount: Account | null = null;
@@ -57,7 +55,7 @@ export class AppComponent {
   onAccountCreated(newAccount: Account) {
     this.allAccounts.update(accounts => [...accounts, newAccount]);
     this._selectedAccount = null;
-    this.selectionList?.deselectAll();
+    this.accountList.clearSelection();
   }
 
   onAccountUpdated(updatedAccount: Account) {
@@ -67,13 +65,12 @@ export class AppComponent {
       )
     );
 
-    this.selectionList?.deselectAll();
+    this.accountList.clearSelection();
     this._selectedAccount = null;
   }
 
   onNewAccountClicked() {
-    this.selectionList?.deselectAll();
-    this.selectedAccounts = [];
+    this.accountList.clearSelection();
     this._selectedAccount = null;
   }
 
@@ -81,35 +78,8 @@ export class AppComponent {
     this.searchTerm.set((target as HTMLInputElement).value);
   }
 
-  //TODO: deprecated
-  onAccountListSelectionChange() {
-    if (this.selectedAccounts) {
-      const account = this.selectedAccounts[0];
-      this.accountForm.patchValue({
-        accountName: account.name,
-        username: account.username,
-        password: account.password
-      });
-    }
-  }
-
   onAccountSelectionChange(selectedAccount: Account) {
     this._selectedAccount = selectedAccount
-  }
-
-  filterBySearchTerm(): Account[] {
-    const search = this.searchTerm().toLowerCase().trim();
-
-    if (!search) {
-      return this.allAccounts();
-    }
-
-    return this.allAccounts().filter(account =>
-      account.name.toLowerCase().includes(search));
-  }
-
-  isFormInvalid(): boolean {
-    return this.accountForm.invalid
   }
 }
 

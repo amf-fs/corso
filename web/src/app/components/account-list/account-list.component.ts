@@ -33,11 +33,11 @@ export class AccountListComponent {
     this.searchTerm.set((target as HTMLInputElement).value);
   }
 
-  onAccountListSelectionChange() {
+  onAccountListSelectionChange(): void {
     this.accountSelectionChanged.emit(this.selectedAccounts[0]);
   }
 
-  clearSelection() {
+  clearSelection(): void {
     this.selectionList.deselectAll();
   }
 

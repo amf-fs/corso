@@ -42,8 +42,6 @@ export class AppComponent {
     return this._selectedAccount;
   }
 
-  private readonly searchTerm = signal<string>('');
-
   constructor(private readonly formBuilder: FormBuilder) {
     this.accountForm = this.formBuilder.group({
       accountName: ['', Validators.required],
@@ -72,10 +70,6 @@ export class AppComponent {
   onNewAccountClicked() {
     this.accountList.clearSelection();
     this._selectedAccount = null;
-  }
-
-  onSearchInput({ target }: Event): void {
-    this.searchTerm.set((target as HTMLInputElement).value);
   }
 
   onAccountSelectionChange(selectedAccount: Account) {

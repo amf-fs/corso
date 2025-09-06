@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +9,8 @@ import { Account } from './app.model';
 import { MatListModule } from '@angular/material/list';
 import { AccountFormComponent } from "./components/account-form/account-form.component";
 import { AccountListComponent } from './components/account-list/account-list.component';
+import { AccountService } from './services/account.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +33,7 @@ import { AccountListComponent } from './components/account-list/account-list.com
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   @ViewChild(AccountListComponent) accountList!: AccountListComponent;
 
   accountForm: FormGroup
@@ -42,12 +44,22 @@ export class AppComponent {
     return this._selectedAccount;
   }
 
-  constructor(private readonly formBuilder: FormBuilder) {
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor(private readonly formBuilder: FormBuilder, private readonly accountService: AccountService) {
     this.accountForm = this.formBuilder.group({
       accountName: ['', Validators.required],
       username: ['', Validators.required],
       password: ['', Validators.required],
     })
+  }
+
+  ngOnInit(): void {
+    this.accountService.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(accounts => {
+        this.allAccounts.set(accounts);
+      })
   }
 
   onAccountCreated(newAccount: Account) {

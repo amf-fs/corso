@@ -1,0 +1,6 @@
+{
+  "accounts": [
+    { "id": 1, "name": "Gmail", "username": "user@gmail.com", "password": "pass123" },
+    { "id": 2, "name": "GitHub", "username": "developer", "password": "secret456" }
+  ]
+}

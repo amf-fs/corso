@@ -51,16 +51,16 @@ export class AccountFormComponent {
     }
 
     onSaveButtonClick(): void {
-        const accountValue = this.account();
+        const existingAccount = this.account();
 
         const formValues: Account = {
-            id: accountValue ? accountValue.id : Math.floor(Math.random() * 1000) + 1,
             name: this.accountNameControl?.value as string,
             username: this.usernameControl?.value as string,
             password: this.passwordControl?.value as string
         };
 
-        if (accountValue) {
+        if (existingAccount) {
+            formValues.id = existingAccount.id;
             this.accountUpdated.emit(formValues)
 
         } else {

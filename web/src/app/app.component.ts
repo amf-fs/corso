@@ -62,10 +62,14 @@ export class AppComponent implements OnInit {
       })
   }
 
-  onAccountCreated(newAccount: Account) {
-    this.allAccounts.update(accounts => [...accounts, newAccount]);
-    this._selectedAccount = null;
-    this.accountList.clearSelection();
+  onAccountCreated(fromForm: Account) {
+    this.accountService.add(fromForm)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(newAccount => {
+        this.allAccounts.update(accounts => [...accounts, newAccount]);
+        this._selectedAccount = null;
+        this.accountList.clearSelection();
+      });
   }
 
   onAccountUpdated(updatedAccount: Account) {

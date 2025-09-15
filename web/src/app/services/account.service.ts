@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { EMPTY, Observable, switchMap } from 'rxjs';
 import { Account } from '../app.model';
 import { environment } from '../../environments/environment';
 
@@ -15,8 +15,13 @@ export class AccountService {
   getAll(): Observable<Account[]>{
     return this.httpClient.get<Account[]>(this.apiUrl);
   }
-
+  
   add(newAccount: Account): Observable<Account> {
     return this.httpClient.post<Account>(this.apiUrl, newAccount);
+  }
+
+  update(toUpdate: Account): Observable<never> {
+    return this.httpClient.put<Account>(`${this.apiUrl}/${toUpdate.id}`, toUpdate)
+      .pipe(switchMap(() => EMPTY));
   }
 }

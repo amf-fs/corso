@@ -73,14 +73,18 @@ export class AppComponent implements OnInit {
   }
 
   onAccountUpdated(updatedAccount: Account) {
-    this.allAccounts.update(accounts =>
-      accounts.map(account =>
-        account.id === this.selectedAccount?.id ? updatedAccount : account
-      )
-    );
+    this.accountService.update(updatedAccount)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({complete: () => {
+        this.allAccounts.update(accounts =>
+          accounts.map(account =>
+            account.id === updatedAccount.id ? updatedAccount : account
+          )
+        );
 
-    this.accountList.clearSelection();
-    this._selectedAccount = null;
+        this.accountList.clearSelection();
+        this._selectedAccount = null;
+      }})
   }
 
   onNewAccountClicked() {

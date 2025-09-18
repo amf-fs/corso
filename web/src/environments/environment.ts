@@ -1,3 +1,3 @@
 export const environment = {
-    corsoApiBasePath: 'http://localhost:3000' 
+    corsoApiBasePath: 'http://localhost:5113/api' 
 };

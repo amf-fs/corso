@@ -1,22 +1,61 @@
+using System.Threading.Tasks;
+using CorsoApi.Core;
+using CorsoApi.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CorsoApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AccountsController : ControllerBase
+public class AccountsController(IAccountsRepository repository) : ControllerBase
 {
+    private readonly IAccountsRepository repository = repository;
+
     [HttpGet]
-    public ActionResult<List<AccountResponse>> GetAll()
+    public async Task<ActionResult<List<AccountResponse>>> GetAll()
     {
-        var accounts = new List<AccountResponse>
+        var accounts = await repository.GetAllAsync();
+
+        var response = accounts.Select(account => new AccountResponse
         {
-            new() { Id = 1, Name = "Gmail", Username = "user@gmail.com", Password = "password123" },
-            new() { Id = 2, Name = "Facebook", Username = "myuser", Password = "secret456" }
-        };
-        
-        return Ok(accounts);
+            Id = account.Id,
+            Name = account.Name,
+            Username = account.Username,
+            Password = account.Password
+        });
+
+        return Ok(response);
     }
+
+    [HttpPost]
+    public async Task<ActionResult> Post(AccountRequest request)
+    {
+        var account = new Account
+        {
+            Name = request.Name,
+            Username = request.Username,
+            Password = request.Password
+        };
+
+        await repository.AddAsync(account);
+
+        var response = new AccountResponse
+        {
+            Id = account.Id,
+            Name = account.Name,
+            Password = account.Password,
+            Username = account.Username
+        };
+
+        return Ok(response);
+    }
+}
+
+public class AccountRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }
 
 public class AccountResponse

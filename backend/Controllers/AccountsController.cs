@@ -17,12 +17,12 @@ public class AccountsController(IAccountsRepository repository) : ControllerBase
         var accounts = await repository.GetAllAsync();
 
         var response = accounts.Select(account => new AccountResponse
-        {
-            Id = account.Id,
-            Name = account.Name,
-            Username = account.Username,
-            Password = account.Password
-        });
+        (
+            account.Id,
+            account.Name,
+            account.Username,
+            account.Password
+        ));
 
         return Ok(response);
     }
@@ -40,28 +40,36 @@ public class AccountsController(IAccountsRepository repository) : ControllerBase
         await repository.AddAsync(account);
 
         var response = new AccountResponse
-        {
-            Id = account.Id,
-            Name = account.Name,
-            Password = account.Password,
-            Username = account.Username
-        };
+        (
+            account.Id,
+            account.Name,
+            account.Username,
+            account.Password
+        );
 
         return Ok(response);
     }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult> Put(int id, AccountRequest newValues)
+    {
+        if (!await repository.ExistsAsync(id))
+        {
+            return NotFound();
+        }
+
+        var account = new Account()
+        {
+            Id = id,
+            Name = newValues.Name,
+            Username = newValues.Username,
+            Password = newValues.Password
+        };
+
+        await repository.UpdateAsync(account);
+        return NoContent();
+    }
 }
 
-public class AccountRequest
-{
-    public string Name { get; set; } = string.Empty;
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
-
-public class AccountResponse
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
+public record AccountRequest(string Name, string Username, string Password);
+public record AccountResponse(int Id, string Name, string Username, string Password);

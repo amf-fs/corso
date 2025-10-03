@@ -12,6 +12,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
 
 builder.Services.Configure<RouteOptions>(options =>
 {
@@ -41,6 +42,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//Use section
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("AllowCorsoWeb");
 app.MapControllers();

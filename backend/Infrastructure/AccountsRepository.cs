@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CorsoApi.Core;
 
 namespace CorsoApi.Infrastructure.Data
@@ -14,14 +15,13 @@ namespace CorsoApi.Infrastructure.Data
     public class AccountsRepository : IAccountsRepository
     {
         private readonly List<Account> accounts;
+        private readonly string filePath;
 
-        public AccountsRepository()
+        public AccountsRepository(string filePath)
         {
-            accounts =
-            [
-                new() { Id = 1, Name = "Gmail", Username = "user@gmail.com", Password = "password123" },
-                new() { Id = 2, Name = "Facebook", Username = "myuser", Password = "secret456" }
-            ];
+            this.filePath = filePath;
+            var text = File.ReadAllText(filePath);
+            accounts = string.IsNullOrWhiteSpace(text) ? [] : JsonSerializer.Deserialize<List<Account>>(text) ?? [];
         }
 
         public Task<List<Account>> GetAllAsync()
@@ -29,17 +29,17 @@ namespace CorsoApi.Infrastructure.Data
             return Task.FromResult(accounts);
         }
 
-        public Task AddAsync(Account @new)
+        public async Task AddAsync(Account @new)
         {
-            @new.Id = accounts.Max(_ => _.Id) + 1;
+            @new.Id = accounts.Count == 0 ? 1 : accounts.Max(_ => _.Id) + 1;
             accounts.Add(@new);
-            return Task.CompletedTask;
+            await CommitChanges();
         }
 
         public Task<bool> ExistsAsync(int id) =>
             Task.FromResult(accounts.Any(_ => id == _.Id));
 
-        public Task UpdateAsync(Account newValues)
+        public async Task UpdateAsync(Account newValues)
         {
             var target = accounts.SingleOrDefault(_ => _.Id == newValues.Id);
 
@@ -52,7 +52,13 @@ namespace CorsoApi.Infrastructure.Data
             target.Username = newValues.Username;
             target.Password = newValues.Password;
 
-            return Task.CompletedTask;
+            await CommitChanges();
+        }
+
+        private async Task CommitChanges()
+        {
+            var json = JsonSerializer.Serialize(accounts);
+            await File.WriteAllTextAsync(filePath, json);
         }
     }
 }

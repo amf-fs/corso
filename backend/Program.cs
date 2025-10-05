@@ -3,8 +3,11 @@ using CorsoApi.Infrastructure.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 //Infrastructure services
-//TODO: singleton for now to emulate DB state
-builder.Services.AddSingleton<IAccountsRepository, AccountsRepository>();
+builder.Services.AddSingleton<IAccountsRepository, AccountsRepository>(opts =>
+{
+    //TODO: path in config file
+    return new AccountsRepository("db.json");
+});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

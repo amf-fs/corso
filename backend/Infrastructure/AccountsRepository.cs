@@ -1,64 +1,109 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using CorsoApi.Core;
+using Konscious.Security.Cryptography;
 
 namespace CorsoApi.Infrastructure.Data
 {
-    public interface IAccountsRepository
+    public interface IAccountsVault
     {
-        Task AddAsync(Account @new);
-        Task<bool> ExistsAsync(int id);
-        Task<List<Account>> GetAllAsync();
-        Task UpdateAsync(Account newValues);
+        void Add(Account @new);
+        bool Exists(int id);
+        List<Account> GetAll();
+        Task LockAsync();
+        Task UnLockAsync(string masterPassword);
+        void Update(Account newValues);
     }
 
-    //TODO: refactor to persist in file
-    public class AccountsRepository : IAccountsRepository
+    public class AccountsVault : IAccountsVault
     {
-        private readonly List<Account> accounts;
+        private List<Account> accounts;
         private readonly string filePath;
+        private byte[] encryptionKey;
 
-        public AccountsRepository(string filePath)
+        public AccountsVault(string filePath)
         {
             this.filePath = filePath;
-            var text = File.ReadAllText(filePath);
-            accounts = string.IsNullOrWhiteSpace(text) ? [] : JsonSerializer.Deserialize<List<Account>>(text) ?? [];
+            accounts = [];
+            encryptionKey = [];
         }
 
-        public Task<List<Account>> GetAllAsync()
+        public List<Account> GetAll()
         {
-            return Task.FromResult(accounts);
+            return accounts;
         }
 
-        public async Task AddAsync(Account @new)
+        public void Add(Account @new)
         {
             @new.Id = accounts.Count == 0 ? 1 : accounts.Max(_ => _.Id) + 1;
             accounts.Add(@new);
-            await CommitChanges();
         }
 
-        public Task<bool> ExistsAsync(int id) =>
-            Task.FromResult(accounts.Any(_ => id == _.Id));
+        public bool Exists(int id) =>
+            accounts.Any(_ => id == _.Id);
 
-        public async Task UpdateAsync(Account newValues)
+        public async Task LockAsync()
         {
-            var target = accounts.SingleOrDefault(_ => _.Id == newValues.Id);
+            using var fileStream = File.Create(filePath);
+            using var aes = Aes.Create();
+            aes.Key = encryptionKey;
+            aes.GenerateIV();
 
-            if (target is null)
-            {
-                throw new InvalidOperationException($"account with id : {newValues.Id} was not found");
-            }
+            // Write IV to beginning of file
+            await fileStream.WriteAsync(aes.IV.AsMemory(0, aes.IV.Length));
 
+            using var cryptoStream = new CryptoStream(fileStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
+            using var writer = new StreamWriter(cryptoStream, Encoding.UTF8);
+
+            var json = JsonSerializer.Serialize(accounts, new JsonSerializerOptions { WriteIndented = true });
+            await writer.WriteAsync(json);
+        }
+
+        public void Update(Account newValues)
+        {
+            var target = accounts.SingleOrDefault(_ => _.Id == newValues.Id) ?? throw new InvalidOperationException($"account with id : {newValues.Id} was not found");
             target.Name = newValues.Name;
             target.Username = newValues.Username;
             target.Password = newValues.Password;
-
-            await CommitChanges();
         }
 
-        private async Task CommitChanges()
+        public async Task UnLockAsync(string masterPassword)
         {
-            var json = JsonSerializer.Serialize(accounts);
-            await File.WriteAllTextAsync(filePath, json);
+            encryptionKey = DeriveKeyFromPassword(masterPassword);
+            accounts = await LoadAsync();
+        }
+
+        private async Task<List<Account>> LoadAsync()
+        {
+            if (!File.Exists(filePath))
+            {
+                return [];
+            }
+
+            using var fileStream = File.OpenRead(filePath);
+            using var aes = Aes.Create();
+            aes.Key = encryptionKey;
+
+            var iv = new byte[16];
+            await fileStream.ReadExactlyAsync(iv);
+            aes.IV = iv;
+
+            using var cryptoStream = new CryptoStream(fileStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            using var reader = new StreamReader(cryptoStream, Encoding.UTF8);
+            var json = await reader.ReadToEndAsync();
+            return JsonSerializer.Deserialize<List<Account>>(json) ?? [];
+        }
+
+        private static byte[] DeriveKeyFromPassword(string masterPassword)
+        {
+            using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(masterPassword));
+            //TODO: store salt safely
+            argon2.Salt = Encoding.UTF8.GetBytes("Salt2025");
+            argon2.DegreeOfParallelism = Environment.ProcessorCount;
+            argon2.Iterations = 4;
+            argon2.MemorySize = 65536; //64MB
+            return argon2.GetBytes(32);
         }
     }
 }

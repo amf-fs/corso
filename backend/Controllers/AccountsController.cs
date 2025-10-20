@@ -7,14 +7,18 @@ namespace CorsoApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AccountsController(IAccountsRepository repository) : ControllerBase
+public class AccountsController(IAccountsVault vault) : ControllerBase
 {
-    private readonly IAccountsRepository repository = repository;
+    private readonly IAccountsVault vault = vault;
+    //TODO: ask on HTTP header
+    private const string masterPassword = "pwd@123!";
 
     [HttpGet]
     public async Task<ActionResult<List<AccountResponse>>> GetAll()
     {
-        var accounts = await repository.GetAllAsync();
+        await vault.UnLockAsync(masterPassword);
+        var accounts = vault.GetAll();
+        await vault.LockAsync();
 
         var response = accounts.Select(account => new AccountResponse
         (
@@ -37,7 +41,9 @@ public class AccountsController(IAccountsRepository repository) : ControllerBase
             Password = request.Password
         };
 
-        await repository.AddAsync(account);
+        await vault.UnLockAsync(masterPassword);
+        vault.Add(account);
+        await vault.LockAsync();
 
         var response = new AccountResponse
         (
@@ -53,7 +59,8 @@ public class AccountsController(IAccountsRepository repository) : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Put(int id, AccountRequest newValues)
     {
-        if (!await repository.ExistsAsync(id))
+        await vault.UnLockAsync(masterPassword);
+        if (!vault.Exists(id))
         {
             return NotFound();
         }
@@ -66,7 +73,8 @@ public class AccountsController(IAccountsRepository repository) : ControllerBase
             Password = newValues.Password
         };
 
-        await repository.UpdateAsync(account);
+        vault.Update(account);
+        await vault.LockAsync();
         return NoContent();
     }
 }

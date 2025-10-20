@@ -3,10 +3,10 @@ using CorsoApi.Infrastructure.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 //Infrastructure services
-builder.Services.AddSingleton<IAccountsRepository, AccountsRepository>(opts =>
+builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 {
     //TODO: path in config file
-    return new AccountsRepository("db.json");
+    return new AccountsVault("db.dat");
 });
 
 // Add services to the container.

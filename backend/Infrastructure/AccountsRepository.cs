@@ -4,7 +4,7 @@ using System.Text.Json;
 using CorsoApi.Core;
 using Konscious.Security.Cryptography;
 
-namespace CorsoApi.Infrastructure.Data
+namespace CorsoApi.Infrastructure
 {
     public interface IAccountsVault
     {
@@ -12,7 +12,7 @@ namespace CorsoApi.Infrastructure.Data
         bool Exists(int id);
         List<Account> GetAll();
         Task LockAsync();
-        Task UnLockAsync(string masterPassword);
+        Task UnLockAsync();
         void Update(Account newValues);
     }
 
@@ -20,11 +20,15 @@ namespace CorsoApi.Infrastructure.Data
     {
         private List<Account> accounts;
         private readonly string filePath;
+        private readonly string masterPassword;
+        private readonly string salt;
         private byte[] encryptionKey;
 
-        public AccountsVault(string filePath)
+        public AccountsVault(string filePath, string masterPassword, string salt)
         {
             this.filePath = filePath;
+            this.masterPassword = masterPassword;
+            this.salt = salt;
             accounts = [];
             encryptionKey = [];
         }
@@ -68,9 +72,9 @@ namespace CorsoApi.Infrastructure.Data
             target.Password = newValues.Password;
         }
 
-        public async Task UnLockAsync(string masterPassword)
+        public async Task UnLockAsync()
         {
-            encryptionKey = DeriveKeyFromPassword(masterPassword);
+            encryptionKey = DeriveKeyFromPassword();
             accounts = await LoadAsync();
         }
 
@@ -95,11 +99,10 @@ namespace CorsoApi.Infrastructure.Data
             return JsonSerializer.Deserialize<List<Account>>(json) ?? [];
         }
 
-        private static byte[] DeriveKeyFromPassword(string masterPassword)
+        private byte[] DeriveKeyFromPassword()
         {
             using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(masterPassword));
-            //TODO: store salt safely
-            argon2.Salt = Encoding.UTF8.GetBytes("Salt2025");
+            argon2.Salt = Encoding.UTF8.GetBytes(salt);
             argon2.DegreeOfParallelism = Environment.ProcessorCount;
             argon2.Iterations = 4;
             argon2.MemorySize = 65536; //64MB

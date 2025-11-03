@@ -1,12 +1,19 @@
-using CorsoApi.Infrastructure.Data;
+using CorsoApi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 //Infrastructure services
+builder.Services.AddSingleton<ISecretStore, KeyringSecretStore>();
 builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 {
-    //TODO: path in config file
-    return new AccountsVault("db.dat");
+    var secretStore = opts.GetRequiredService<ISecretStore>();
+    var masterPassword = secretStore.GetSecretAsync("master").GetAwaiter().GetResult()
+        ?? throw new InvalidOperationException("Master password not found in secret store. Did you forget to set it up?");
+
+    var salt = secretStore.GetSecretAsync("salt").GetAwaiter().GetResult()
+        ?? throw new InvalidOperationException("Salt not found in secret store. Did you forget to set it up?");
+    
+    return new AccountsVault("db.dat", masterPassword, salt);
 });
 
 // Add services to the container.

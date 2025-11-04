@@ -26,15 +26,20 @@ export class AccountFormComponent {
     @Output() newAccountClicked = new EventEmitter<void>();
 
     get accountNameControl() {
-        return this.accountForm.get('accountName');
+      return this.accountForm.get('accountName');
     }
 
     get usernameControl() {
-        return this.accountForm.get('username');
+      return this.accountForm.get('username');
     }
 
     get passwordControl() {
-        return this.accountForm.get('password');
+      return this.accountForm.get('password');
+    }
+
+    private _showPassword = false;
+    get showPassword() : boolean{
+      return this._showPassword;
     }
 
     account = input<Account | null>(null);
@@ -73,6 +78,10 @@ export class AccountFormComponent {
     onNewAccountButtonClick() {
         this.accountForm.reset();
         this.newAccountClicked.emit();
+    }
+
+    onPasswordVisibilityButtonClick(): void{
+      this._showPassword = !this._showPassword;
     }
 
     isFormInvalid(): boolean {

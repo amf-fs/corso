@@ -15,7 +15,10 @@
     </mat-form-field>
     <mat-form-field>
         <mat-label>password</mat-label>
-        <input matInput type="password" formControlName="password" />
+        <input matInput [type]="showPassword ? 'text' : 'password'" formControlName="password" />
+        <button mat-icon-button matSuffix (click)="onPasswordVisibilityButtonClick()">
+          <mat-icon>{{showPassword ? 'visibility' : 'visibility_off'}}</mat-icon>
+        </button>
         @if (passwordControl?.invalid){
         <mat-error>You must enter a password.</mat-error>
         }

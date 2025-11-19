@@ -1,0 +1,9 @@
+<div class="flex flex-row w-full h-screen">
+  <app-account-list class="w-1/2" [accounts]="allAccounts()"
+    (accountSelectionChanged)="onAccountSelectionChange($event)">
+  </app-account-list>
+  <mat-divider [vertical]="true" class="h-full"></mat-divider>
+  <app-account-form class="w-1/2" [account]="selectedAccount" (accountCreated)="onAccountCreated($event)"
+    (accountUpdated)="onAccountUpdated($event)" (newAccountClicked)="onNewAccountClicked()">
+  </app-account-form>
+</div>

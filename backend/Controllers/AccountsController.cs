@@ -8,6 +8,7 @@ namespace CorsoApi.Controllers;
 //TODO: secure the controller with authentication
 [ApiController]
 [Route("api/[controller]")]
+[SessionAuthorize]
 public class AccountsController : ControllerBase
 {
     private readonly IAccountsVault vault;

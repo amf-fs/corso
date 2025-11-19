@@ -8,5 +8,5 @@ public interface ISecretStore
     /// <summary>
     /// Retrieves a secret value by key. Returns null if the secret does not exist.
     /// </summary>
-    Task<string?> GetSecretAsync(string key, CancellationToken cancellationToken = default);
+    Task<string> GetRequiredSecretAsync(string key, CancellationToken cancellationToken = default);
 }

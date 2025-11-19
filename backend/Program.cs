@@ -7,14 +7,12 @@ builder.Services.AddSingleton<ISecretStore, KeyringSecretStore>();
 builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 {
     var secretStore = opts.GetRequiredService<ISecretStore>();
-    var masterPassword = secretStore.GetSecretAsync("master").GetAwaiter().GetResult()
-        ?? throw new InvalidOperationException("Master password not found in secret store. Did you forget to set it up?");
-
-    var salt = secretStore.GetSecretAsync("salt").GetAwaiter().GetResult()
-        ?? throw new InvalidOperationException("Salt not found in secret store. Did you forget to set it up?");
-    
+    var masterPassword = secretStore.GetRequiredSecretAsync("master").GetAwaiter().GetResult();
+    var salt = secretStore.GetRequiredSecretAsync("salt").GetAwaiter().GetResult();  
+    //TODO: inject only master hash
     return new AccountsVault("db.dat", masterPassword, salt);
 });
+builder.Services.AddScoped<IHasher, Argon2Hasher>();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -42,6 +40,27 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddDistributedMemoryCache();
+// Add session support
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = ".Corso.Session";
+    //TODO: Implement hard limit.
+    options.IdleTimeout = TimeSpan.FromMinutes(1);
+    options.Cookie.HttpOnly = true;           // XSS protection javascript cannot access
+    options.Cookie.IsEssential = true;        // Essential to app
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;  //HTTPS only
+
+    if(builder.Environment.IsDevelopment())
+    {
+        options.Cookie.SameSite = SameSiteMode.None;  //Allow cross-site requests for development
+    }
+    else
+    {
+        options.Cookie.SameSite = SameSiteMode.Strict;  //CSRF protection, can only be sent to same domain
+    }
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -56,5 +75,6 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("AllowCorsoWeb");
+app.UseSession();
 app.MapControllers();
 await app.RunAsync();

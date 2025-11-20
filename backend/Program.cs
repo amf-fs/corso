@@ -7,14 +7,11 @@ builder.Services.AddSingleton<ISecretStore, KeyringSecretStore>();
 builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 {
     var secretStore = opts.GetRequiredService<ISecretStore>();
-    var masterPassword = secretStore.GetSecretAsync("master").GetAwaiter().GetResult()
-        ?? throw new InvalidOperationException("Master password not found in secret store. Did you forget to set it up?");
-
-    var salt = secretStore.GetSecretAsync("salt").GetAwaiter().GetResult()
-        ?? throw new InvalidOperationException("Salt not found in secret store. Did you forget to set it up?");
-    
+    var masterPassword = secretStore.GetRequiredSecretAsync("master").GetAwaiter().GetResult();
+    var salt = secretStore.GetRequiredSecretAsync("salt").GetAwaiter().GetResult();  
     return new AccountsVault("db.dat", masterPassword, salt);
 });
+builder.Services.AddScoped<IHasher, Argon2Hasher>();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

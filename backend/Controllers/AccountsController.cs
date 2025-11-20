@@ -18,6 +18,7 @@ public class AccountsController : ControllerBase
     }
 
     [HttpGet]
+    [SessionAuthorize]
     public async Task<ActionResult<List<AccountResponse>>> GetAll()
     {
         await vault.UnLockAsync();

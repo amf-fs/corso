@@ -9,6 +9,7 @@ builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
     var secretStore = opts.GetRequiredService<ISecretStore>();
     var masterPassword = secretStore.GetRequiredSecretAsync("master").GetAwaiter().GetResult();
     var salt = secretStore.GetRequiredSecretAsync("salt").GetAwaiter().GetResult();  
+    //TODO: inject only master hash
     return new AccountsVault("db.dat", masterPassword, salt);
 });
 builder.Services.AddScoped<IHasher, Argon2Hasher>();

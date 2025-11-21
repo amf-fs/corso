@@ -11,6 +11,8 @@ import { AccountFormComponent } from "./components/account-form/account-form.com
 import { AccountListComponent } from './components/account-list/account-list.component';
 import { AccountService } from './services/account.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AuthorizationService } from './services/authorization.service';
+import { MasterPasswordComponent } from './components/master-password/master-password.component';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +27,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     FormsModule,
     MatListModule,
     AccountFormComponent,
-    AccountListComponent
+    AccountListComponent,
+    MasterPasswordComponent
   ],
   providers: [
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }
@@ -40,13 +43,18 @@ export class AppComponent implements OnInit {
   allAccounts = signal<Account[]>([]);
 
   private _selectedAccount: Account | null = null;
+
   get selectedAccount(): Account | null {
     return this._selectedAccount;
   }
 
   private readonly destroyRef = inject(DestroyRef);
 
-  constructor(private readonly formBuilder: FormBuilder, private readonly accountService: AccountService) {
+  constructor(
+    private readonly formBuilder: FormBuilder,
+    private readonly accountService: AccountService,
+    private readonly authorizationService: AuthorizationService
+  ) {
     this.accountForm = this.formBuilder.group({
       accountName: ['', Validators.required],
       username: ['', Validators.required],
@@ -94,6 +102,10 @@ export class AppComponent implements OnInit {
 
   onAccountSelectionChange(selectedAccount: Account) {
     this._selectedAccount = selectedAccount
+  }
+
+  isAuthenticated(): boolean {
+    return this.authorizationService.isAuthenticated();
   }
 }
 

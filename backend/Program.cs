@@ -74,7 +74,10 @@ if (app.Environment.IsDevelopment())
 //Use section
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseCors("AllowCorsoWeb");
 app.UseSession();
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 await app.RunAsync();

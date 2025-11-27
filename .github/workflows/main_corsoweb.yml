@@ -29,6 +29,7 @@ jobs:
       
       - name: Build Angular app
         run: npm run build -- --configuration production
+        working-directory: ./web
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4

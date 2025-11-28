@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using CorsoApi.Core;
-using Konscious.Security.Cryptography;
 
 namespace CorsoApi.Infrastructure
 {
@@ -16,22 +15,11 @@ namespace CorsoApi.Infrastructure
         void Update(Account newValues);
     }
 
-    public class AccountsVault : IAccountsVault
+    public class AccountsVault(string filePath, string masterHash) : IAccountsVault
     {
-        private List<Account> accounts;
-        private readonly string filePath;
-        private readonly string masterPassword;
-        private readonly string salt;
-        private byte[] encryptionKey;
-
-        public AccountsVault(string filePath, string masterPassword, string salt)
-        {
-            this.filePath = filePath;
-            this.masterPassword = masterPassword;
-            this.salt = salt;
-            accounts = [];
-            encryptionKey = [];
-        }
+        private List<Account> accounts = [];
+        private readonly string filePath = filePath;
+        private readonly byte[] encryptionKey = Convert.FromBase64String(masterHash);
 
         public List<Account> GetAll()
         {
@@ -66,7 +54,9 @@ namespace CorsoApi.Infrastructure
 
         public void Update(Account newValues)
         {
-            var target = accounts.SingleOrDefault(_ => _.Id == newValues.Id) ?? throw new InvalidOperationException($"account with id : {newValues.Id} was not found");
+            var target = accounts.SingleOrDefault(_ => _.Id == newValues.Id) 
+                ?? throw new InvalidOperationException($"account with id : {newValues.Id} was not found");
+            
             target.Name = newValues.Name;
             target.Username = newValues.Username;
             target.Password = newValues.Password;
@@ -74,15 +64,10 @@ namespace CorsoApi.Infrastructure
 
         public async Task UnLockAsync()
         {
-            encryptionKey = DeriveKeyFromPassword();
-            accounts = await LoadAsync();
-        }
-
-        private async Task<List<Account>> LoadAsync()
-        {
             if (!File.Exists(filePath))
             {
-                return [];
+                accounts = [];
+                return;
             }
 
             using var fileStream = File.OpenRead(filePath);
@@ -96,17 +81,7 @@ namespace CorsoApi.Infrastructure
             using var cryptoStream = new CryptoStream(fileStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
             using var reader = new StreamReader(cryptoStream, Encoding.UTF8);
             var json = await reader.ReadToEndAsync();
-            return JsonSerializer.Deserialize<List<Account>>(json) ?? [];
-        }
-
-        private byte[] DeriveKeyFromPassword()
-        {
-            using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(masterPassword));
-            argon2.Salt = Encoding.UTF8.GetBytes(salt);
-            argon2.DegreeOfParallelism = Environment.ProcessorCount;
-            argon2.Iterations = 4;
-            argon2.MemorySize = 65536; //64MB
-            return argon2.GetBytes(32);
+            accounts = JsonSerializer.Deserialize<List<Account>>(json) ?? [];
         }
     }
 }

@@ -6,16 +6,21 @@ namespace CorsoApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthorizationsController(ISecretStore secretStore, IHasher hasher) : ControllerBase
+public class AuthorizationsController(IConfiguration configuration, IHasher hasher) : ControllerBase
 {
-    private readonly ISecretStore secretStore = secretStore;
+    private readonly IConfiguration configuration = configuration;
 
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] AuthorizationRequest request)
     {
-        var storedHash = await secretStore.GetRequiredSecretAsync("masterHash");
-        var salt = await secretStore.GetRequiredSecretAsync("salt");
+        var storedHash = configuration["masterHash"]!;
+        var salt = configuration["salt"]!;
         var hashOfRequest = hasher.Create(request.MasterPassword, salt);
+
+        Console.WriteLine("Authorization Attempt:");
+        Console.WriteLine($"Stored Hash: {storedHash}");
+        Console.WriteLine($"Hash of Request: {hashOfRequest}");
+        Console.WriteLine($"Salt: {salt}");
         
         if (hashOfRequest != storedHash)
         {

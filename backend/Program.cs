@@ -3,14 +3,12 @@ using CorsoApi.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 //Infrastructure services
-builder.Services.AddSingleton<ISecretStore, KeyringSecretStore>();
 builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 {
-    var secretStore = opts.GetRequiredService<ISecretStore>();
-    var masterPassword = secretStore.GetRequiredSecretAsync("master").GetAwaiter().GetResult();
-    var salt = secretStore.GetRequiredSecretAsync("salt").GetAwaiter().GetResult();  
-    //TODO: inject only master hash
-    return new AccountsVault("db.dat", masterPassword, salt);
+    var masterHash = builder.Configuration["masterHash"]
+        ?? throw new InvalidOperationException("masterHash configuration is missing");
+
+    return new AccountsVault("db.dat", masterHash);
 });
 builder.Services.AddScoped<IHasher, Argon2Hasher>();
 

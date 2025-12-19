@@ -11,6 +11,7 @@ builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
     return new AccountsVault("db.dat", masterHash);
 });
 builder.Services.AddScoped<IHasher, Argon2Hasher>();
+builder.Services.AddScoped<CsvParser>();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

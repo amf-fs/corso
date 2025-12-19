@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CorsoApi.Core;
 using CorsoApi.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CorsoApi.Controllers;
 
@@ -9,14 +10,10 @@ namespace CorsoApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [SessionAuthorize]
-public class AccountsController : ControllerBase
+public class AccountsController(IAccountsVault vault, CsvParser csvParser) : ControllerBase
 {
-    private readonly IAccountsVault vault;
-
-    public AccountsController(IAccountsVault vault)
-    {
-        this.vault = vault;
-    }
+    private readonly IAccountsVault vault = vault;
+    private readonly CsvParser csvParser = csvParser;
 
     [HttpGet]
     public async Task<ActionResult<List<AccountResponse>>> GetAll()
@@ -81,6 +78,34 @@ public class AccountsController : ControllerBase
         vault.Update(account);
         await vault.LockAsync();
         return NoContent();
+    }
+
+    [HttpPost("import")]
+    public async Task<ActionResult> Import(IFormFile file)
+    {  
+        if(file is null || file.Length == 0)
+        {
+            return this.BadRequestProblem("File", $"The file {file?.FileName} was not imported because is empty.");
+        }
+
+        using var stream =  file.OpenReadStream();
+        var validation = csvParser.Validate<Account>(stream);
+
+        if(validation.ErrorMessages is not null)
+        {
+            return this.BadRequestProblem("File", validation.ErrorMessages);
+        }
+
+        var accounts = csvParser.Parse<Account>(stream);
+        await vault.UnLockAsync();
+        
+        foreach(var account in accounts)
+        {
+            vault.Add(account);
+        }
+
+        await vault.LockAsync();
+        return Ok();
     }
 }
 

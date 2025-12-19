@@ -16,11 +16,6 @@ public class AuthorizationsController(IConfiguration configuration, IHasher hash
         var storedHash = configuration["masterHash"]!;
         var salt = configuration["salt"]!;
         var hashOfRequest = hasher.Create(request.MasterPassword, salt);
-
-        Console.WriteLine("Authorization Attempt:");
-        Console.WriteLine($"Stored Hash: {storedHash}");
-        Console.WriteLine($"Hash of Request: {hashOfRequest}");
-        Console.WriteLine($"Salt: {salt}");
         
         if (hashOfRequest != storedHash)
         {

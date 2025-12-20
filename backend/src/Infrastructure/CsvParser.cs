@@ -1,16 +1,12 @@
+
 namespace CorsoApi.Infrastructure;
 
 public class CsvParser
 {
-    public IEnumerable<T> Parse<T>(Stream stream)
-    {
-        throw new NotImplementedException();
-    }
-
-    public ValidationResult Validate<T>(Stream stream)
+    public async Task<ValidationResult> ValidateAsync<T>(Stream stream)
     {
         using var reader = new StreamReader(stream, leaveOpen: true);
-        var header = reader.ReadLine();
+        var header = await reader.ReadLineAsync();
 
         if (string.IsNullOrWhiteSpace(header))
         {
@@ -53,7 +49,11 @@ public class CsvParser
         {
             Succeeded = true
         };
+    }
 
+    internal async Task<T> ParseAsync<T>(Stream stream)
+    {
+        throw new NotImplementedException();
     }
 
     public class ValidationResult

@@ -89,14 +89,14 @@ public class AccountsController(IAccountsVault vault, CsvParser csvParser) : Con
         }
 
         using var stream =  file.OpenReadStream();
-        var validation = csvParser.Validate<Account>(stream);
+        var validation = await csvParser.ValidateAsync<Account>(stream);
 
         if(validation.Error is not null)
         {
             return this.BadRequestProblem("File", validation.Error.Message);
         }
 
-        var accounts = csvParser.Parse<Account>(stream);
+        var accounts = await csvParser.ParseAsync<IEnumerable<Account>>(stream);
         await vault.UnLockAsync();
         
         foreach(var account in accounts)

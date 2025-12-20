@@ -91,9 +91,9 @@ public class AccountsController(IAccountsVault vault, CsvParser csvParser) : Con
         using var stream =  file.OpenReadStream();
         var validation = csvParser.Validate<Account>(stream);
 
-        if(validation.ErrorMessages is not null)
+        if(validation.Error is not null)
         {
-            return this.BadRequestProblem("File", validation.ErrorMessages);
+            return this.BadRequestProblem("File", validation.Error.Message);
         }
 
         var accounts = csvParser.Parse<Account>(stream);

@@ -11,7 +11,7 @@ public class AuthorizationsController(IConfiguration configuration, IHasher hash
     private readonly IConfiguration configuration = configuration;
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] AuthorizationRequest request)
+    public IActionResult Post([FromBody] AuthorizationRequest request)
     {
         var storedHash = configuration["masterHash"]!;
         var salt = configuration["salt"]!;

@@ -51,9 +51,60 @@ public class CsvParser
         };
     }
 
-    internal async Task<T> ParseAsync<T>(Stream stream)
+    public async Task<IEnumerable<T>> ParseAsync<T>(Stream stream)
     {
-        throw new NotImplementedException();
+        var reader = new StreamReader(stream, leaveOpen: true);
+        
+        var header = await reader.ReadLineAsync()
+            ?? throw new InvalidOperationException("File header cannot be empty!");
+        
+        var headerFields = header.Split(",", StringSplitOptions.TrimEntries);
+        var givenType = typeof(T);
+        var propIndexes = new Dictionary<string, int>();
+        List<T> parsedItems = []; 
+
+        foreach(var prop in givenType.GetProperties())
+        {
+            var propIndexOnHeader = Array.FindIndex(headerFields,
+                 _ => _.Equals(prop.Name, StringComparison.OrdinalIgnoreCase));
+
+            propIndexes.Add(prop.Name, propIndexOnHeader);
+        }
+
+        while(!reader.EndOfStream)
+        {
+            var line = await reader.ReadLineAsync();
+            var fields = line?.Split(",", StringSplitOptions.TrimEntries);
+
+            if(fields is not null && fields.Length > 0)
+            {
+                var propValuesMap = new Dictionary<string, object?>();
+
+                foreach(var propIndexItem in propIndexes)
+                {
+                    var value = fields.ElementAtOrDefault(propIndexItem.Value)
+                        ?? throw new InvalidOperationException($"Csv line is bad formatted, could not find {propIndexItem.Key}");
+                    
+                    propValuesMap.Add(propIndexItem.Key, value);
+                }
+                
+                T parsed = Activator.CreateInstance<T>();
+
+                foreach(var prop in givenType.GetProperties())
+                {
+                    //Since we use Split, everything is a string already, so we only need convert types like int double and so on...
+                    var value = prop.PropertyType != typeof(string) ? 
+                        Convert.ChangeType(propValuesMap[prop.Name], prop.PropertyType) :
+                        propValuesMap[prop.Name]; 
+
+                    prop.SetValue(parsed, value);
+                }
+
+                parsedItems.Add(parsed);
+            }
+        }
+
+        return parsedItems;
     }
 
     public class ValidationResult

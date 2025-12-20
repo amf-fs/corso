@@ -70,6 +70,37 @@ public class CsvParserTests
         Assert.True(someStream.CanRead);
     }
 
+    [Fact(DisplayName = "it should parse valid csv file to POCO")]
+    public async Task ParseValidCsvFile()
+    {
+        //Arrange
+        var validCsv = @"title,quantity,username
+                        some title,20,someUser
+                        some title2,40,someUser2";
+        
+        //Act
+        var actual = await _csvParser.ParseAsync<Poco>(validCsv.ToMemoryStream());
+
+        //Assert
+        var expected = new List<Poco>()
+        {
+            new()
+            {
+                Title = "some title",
+                Quantity = 20,
+                Username = "someUser"      
+            },
+            new()
+            {
+                Title = "some title2",
+                Quantity = 40,
+                Username = "someUser2"
+            }
+        };
+
+        Assert.Equivalent(expected, actual);
+    }
+
     private class Poco
     {
         public required string Title {get; set;}

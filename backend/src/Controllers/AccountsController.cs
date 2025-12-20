@@ -96,7 +96,7 @@ public class AccountsController(IAccountsVault vault, CsvParser csvParser) : Con
             return this.BadRequestProblem("File", validation.Error.Message);
         }
 
-        var accounts = await csvParser.ParseAsync<IEnumerable<Account>>(stream);
+        var accounts = await csvParser.ParseAsync<Account>(stream);
         await vault.UnLockAsync();
         
         foreach(var account in accounts)

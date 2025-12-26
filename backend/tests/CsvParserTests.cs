@@ -101,6 +101,61 @@ public class CsvParserTests
         Assert.Equivalent(expected, actual);
     }
 
+    [Fact(DisplayName = "it should parse valid csv that contains extra columns")]
+    public async Task ParseValidCsvWithExtraColumns()
+    {
+        //Arrange
+        var validCsvWithExtraColumns = @"extra1,title,quantity,extra2,username
+                        extraData,some title,20,extraData2,someUser
+                        extraData,some title2,40,extraData2,someUser2";
+        
+        //Act
+        var actual = await _csvParser.ParseAsync<Poco>(validCsvWithExtraColumns.ToMemoryStream());
+
+        //Assert
+        var expected = new List<Poco>()
+        {
+            new()
+            {
+                Title = "some title",
+                Quantity = 20,
+                Username = "someUser"      
+            },
+            new()
+            {
+                Title = "some title2",
+                Quantity = 40,
+                Username = "someUser2"
+            }
+        };
+
+        Assert.Equivalent(expected, actual);
+    }
+
+    [Fact(DisplayName="it should throw exception when parse and csv is missing poco property")]
+    public async Task ShouldThrowIfMissingProperty()
+    {
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        {
+            var csvWithMissingTitle = @"username, quantity
+                                        aName, 20";
+        
+            return _csvParser.ParseAsync<Poco>(csvWithMissingTitle.ToMemoryStream());    
+        });
+    }
+
+    [Fact(DisplayName="it should throw exception when parse and csv is bad formatted")]
+    public async Task ShouldThrowIfBadFormat()
+    {
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        {
+            var csvWithMissingTitleValue = @"username, quantity,title
+                                        aName, 20";
+        
+           return _csvParser.ParseAsync<Poco>(csvWithMissingTitleValue.ToMemoryStream());    
+        });
+    }
+
     private class Poco
     {
         public required string Title {get; set;}

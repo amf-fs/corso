@@ -20,14 +20,14 @@ public class CsvParser
             };
         }
 
-        var fields = header.Split(",", StringSplitOptions.TrimEntries);
+        var fieldsFromHeader = header.Split(",", StringSplitOptions.TrimEntries);
         var givenType = typeof(T);
         var propertiesFromGivenType = givenType.GetProperties();
         var missingFields = new List<string>();
 
         foreach (var prop in propertiesFromGivenType)
         {
-            if (!fields.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
+            if (!fieldsFromHeader.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
             {
                 missingFields.Add(prop.Name.ToLower());
             }
@@ -55,12 +55,36 @@ public class CsvParser
     {
         var reader = new StreamReader(stream, leaveOpen: true);
         
-        var header = await reader.ReadLineAsync()
+        var headerLine = await reader.ReadLineAsync()
             ?? throw new InvalidOperationException("File header cannot be empty!");
         
-        var headerFields = header.Split(",", StringSplitOptions.TrimEntries);
+        var indexesFromType = MapIndexesFromType<T>(headerLine);
+
+        //starts at 2 because of header.
+        List<T> parsedItems = []; 
+        var lineNumber = 2;
+        while(!reader.EndOfStream)
+        {
+            var line = await reader.ReadLineAsync()
+                ?? throw new InvalidOperationException($"Csv line {lineNumber} is empty.");
+
+            T parsed = ParseItem<T>(indexesFromType, line, lineNumber);
+            parsedItems.Add(parsed);
+            lineNumber++;
+        }
+
+        return parsedItems;
+    }
+
+    /// <summary>
+    /// It finds the property name on given header line and maps the index
+    /// With this technique it is possible to access the values by position.
+    /// </summary>
+    private static Dictionary<string, int> MapIndexesFromType<T>(string headerLine)
+    {
+        var headerFields = headerLine.Split(",", StringSplitOptions.TrimEntries);
         var givenType = typeof(T);
-        var propIndexes = new Dictionary<string, int>();
+        var headerIndexes = new Dictionary<string, int>();
         List<T> parsedItems = []; 
 
         foreach(var prop in givenType.GetProperties())
@@ -68,43 +92,49 @@ public class CsvParser
             var propIndexOnHeader = Array.FindIndex(headerFields,
                  _ => _.Equals(prop.Name, StringComparison.OrdinalIgnoreCase));
 
-            propIndexes.Add(prop.Name, propIndexOnHeader);
-        }
-
-        while(!reader.EndOfStream)
-        {
-            var line = await reader.ReadLineAsync();
-            var fields = line?.Split(",", StringSplitOptions.TrimEntries);
-
-            if(fields is not null && fields.Length > 0)
+            if(propIndexOnHeader == -1)
             {
-                var propValuesMap = new Dictionary<string, object?>();
-
-                foreach(var propIndexItem in propIndexes)
-                {
-                    var value = fields.ElementAtOrDefault(propIndexItem.Value)
-                        ?? throw new InvalidOperationException($"Csv line is bad formatted, could not find {propIndexItem.Key}");
-                    
-                    propValuesMap.Add(propIndexItem.Key, value);
-                }
-                
-                T parsed = Activator.CreateInstance<T>();
-
-                foreach(var prop in givenType.GetProperties())
-                {
-                    //Since we use Split, everything is a string already, so we only need convert types like int double and so on...
-                    var value = prop.PropertyType != typeof(string) ? 
-                        Convert.ChangeType(propValuesMap[prop.Name], prop.PropertyType) :
-                        propValuesMap[prop.Name]; 
-
-                    prop.SetValue(parsed, value);
-                }
-
-                parsedItems.Add(parsed);
+                throw new InvalidOperationException($"Required header {prop.Name} is missing at csv file.");
             }
+
+            headerIndexes.Add(prop.Name, propIndexOnHeader);
         }
 
-        return parsedItems;
+        return headerIndexes;
+    }
+
+    private static T ParseItem<T>(Dictionary<string, int> indexesOfValues, string csvLine, int lineNumber)
+    {
+        var fields = csvLine?.Split(",", StringSplitOptions.TrimEntries);
+
+        if (fields is null || fields.Length == 0)
+        {
+            throw new InvalidOperationException($"Csv line {lineNumber} is empty.");
+        }
+
+        var propValuesMap = new Dictionary<string, object?>();
+
+        foreach (var propIndexItem in indexesOfValues)
+        {
+            var value = fields.ElementAtOrDefault(propIndexItem.Value)
+                ?? throw new InvalidOperationException($"Csv line {lineNumber} is bad formatted, could not find {propIndexItem.Key} value.");
+
+            propValuesMap.Add(propIndexItem.Key, value);
+        }
+
+        T item = Activator.CreateInstance<T>();
+
+        foreach (var prop in typeof(T).GetProperties())
+        {
+            //Since we use Split, everything is a string already, so we only need convert types like int double and so on...
+            var value = prop.PropertyType != typeof(string) ?
+                Convert.ChangeType(propValuesMap[prop.Name], prop.PropertyType) :
+                propValuesMap[prop.Name];
+
+            prop.SetValue(item, value);
+        }
+
+        return item;
     }
 
     public class ValidationResult

@@ -1,9 +1,11 @@
 
+using System.Linq.Expressions;
+
 namespace CorsoApi.Infrastructure;
 
 public class CsvParser
 {
-    public async Task<ValidationResult> ValidateAsync<T>(Stream stream)
+    public async Task<ValidationResult> ValidateAsync<T>(Stream stream, params Expression<Func<T, object>>[] doNotValidate)
     {
         using var reader = new StreamReader(stream, leaveOpen: true);
         var header = await reader.ReadLineAsync();
@@ -24,9 +26,15 @@ public class CsvParser
         var givenType = typeof(T);
         var propertiesFromGivenType = givenType.GetProperties();
         var missingFields = new List<string>();
+        var doNotValidateNames = GetNames(doNotValidate);
 
         foreach (var prop in propertiesFromGivenType)
         {
+            if(doNotValidateNames.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             if (!fieldsFromHeader.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
             {
                 missingFields.Add(prop.Name.ToLower());
@@ -51,24 +59,24 @@ public class CsvParser
         };
     }
 
-    public async Task<IEnumerable<T>> ParseAsync<T>(Stream stream)
+    public async Task<IEnumerable<T>> ParseAsync<T>(Stream stream, params Expression<Func<T, object>>[] excludeFromParsing)
     {
         var reader = new StreamReader(stream, leaveOpen: true);
         
         var headerLine = await reader.ReadLineAsync()
             ?? throw new InvalidOperationException("File header cannot be empty!");
         
-        var indexesFromType = MapIndexesFromType<T>(headerLine);
-
-        //starts at 2 because of header.
+        var excludedPropNames = GetNames(excludeFromParsing);
+        var indexesFromType = MapIndexesFromType<T>(headerLine, excludedPropNames);
         List<T> parsedItems = []; 
+        //starts at 2 because of header.
         var lineNumber = 2;
         while(!reader.EndOfStream)
         {
             var line = await reader.ReadLineAsync()
                 ?? throw new InvalidOperationException($"Csv line {lineNumber} is empty.");
 
-            T parsed = ParseItem<T>(indexesFromType, line, lineNumber);
+            var parsed = ParseItem<T>(indexesFromType, line, lineNumber);
             parsedItems.Add(parsed);
             lineNumber++;
         }
@@ -80,15 +88,19 @@ public class CsvParser
     /// It finds the property name on given header line and maps the index
     /// With this technique it is possible to access the values by position.
     /// </summary>
-    private static Dictionary<string, int> MapIndexesFromType<T>(string headerLine)
+    private static Dictionary<string, int> MapIndexesFromType<T>(string headerLine, IEnumerable<string>? excludedPropNames = null)
     {
         var headerFields = headerLine.Split(",", StringSplitOptions.TrimEntries);
         var givenType = typeof(T);
         var headerIndexes = new Dictionary<string, int>();
-        List<T> parsedItems = []; 
-
+        
         foreach(var prop in givenType.GetProperties())
         {
+            if(excludedPropNames is not null && excludedPropNames.Contains(prop.Name))
+            {
+                continue;
+            }
+
             var propIndexOnHeader = Array.FindIndex(headerFields,
                  _ => _.Equals(prop.Name, StringComparison.OrdinalIgnoreCase));
 
@@ -103,7 +115,7 @@ public class CsvParser
         return headerIndexes;
     }
 
-    private static T ParseItem<T>(Dictionary<string, int> indexesOfValues, string csvLine, int lineNumber)
+    private static T ParseItem<T>(Dictionary<string, int> indexValuePairs, string csvLine, int lineNumber)
     {
         var fields = csvLine?.Split(",", StringSplitOptions.TrimEntries);
 
@@ -114,18 +126,24 @@ public class CsvParser
 
         var propValuesMap = new Dictionary<string, object?>();
 
-        foreach (var propIndexItem in indexesOfValues)
+        foreach (var indexValuePair in indexValuePairs)
         {
-            var value = fields.ElementAtOrDefault(propIndexItem.Value)
-                ?? throw new InvalidOperationException($"Csv line {lineNumber} is bad formatted, could not find {propIndexItem.Key} value.");
+            var value = fields.ElementAtOrDefault(indexValuePair.Value)
+                ?? throw new InvalidOperationException($"Csv line {lineNumber} is bad formatted, could not find {indexValuePair.Key} value.");
 
-            propValuesMap.Add(propIndexItem.Key, value);
+            propValuesMap.Add(indexValuePair.Key, value);
         }
 
-        T item = Activator.CreateInstance<T>();
+        var item = Activator.CreateInstance<T>();
 
         foreach (var prop in typeof(T).GetProperties())
         {
+            //We skip values not present in dictionary, because they were excluded.
+            if(!propValuesMap.ContainsKey(prop.Name))
+            {
+                continue;
+            }
+
             //Since we use Split, everything is a string already, so we only need convert types like int double and so on...
             var value = prop.PropertyType != typeof(string) ?
                 Convert.ChangeType(propValuesMap[prop.Name], prop.PropertyType) :
@@ -135,6 +153,25 @@ public class CsvParser
         }
 
         return item;
+    }
+
+    private static IEnumerable<string> GetNames<T>(Expression<Func<T, object>>[] expressions)
+    {
+        foreach(var expression in expressions)
+        {
+            if(expression.Body is MemberExpression memberExpression)
+            {
+                yield return memberExpression.Member.Name;
+            }
+            else if(expression.Body is UnaryExpression unaryExpression && unaryExpression.Operand is MemberExpression memberExpressionFromOperand)
+            {
+                yield return memberExpressionFromOperand.Member.Name;
+            }
+            else
+            {
+                throw new ArgumentException("The expression must be a simple member expression, e.g p => p.Name, p => p.Age, p => p.Gender");
+            }
+        }
     }
 
     public class ValidationResult

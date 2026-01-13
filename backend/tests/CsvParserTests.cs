@@ -1,5 +1,4 @@
-﻿using System.Text;
-using CorsoApi.Infrastructure;
+﻿using CorsoApi.Infrastructure;
 
 namespace CorsoApiTests;
 
@@ -154,6 +153,37 @@ public class CsvParserTests
         
            return _csvParser.ParseAsync<Poco>(csvWithMissingTitleValue.ToMemoryStream());    
         });
+    }
+
+    [Fact(DisplayName = "it should not validate POCO properties when specified")]
+    public async Task ExcludePropertiesFromValidation()
+    {
+        //Arrange
+        var csvContentWithoutQuantity = @"title,username
+                          titleName,testName";
+
+        //Act
+        var result = await _csvParser.ValidateAsync<Poco>(csvContentWithoutQuantity.ToMemoryStream(), poco => poco.Quantity);
+
+        //Assert
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact(DisplayName = "it should not set POCO properties when specified on parsing")]
+    public async Task DoNotSetProertiesOnParsing()
+    {
+        //Arrange
+        var csvContentWithoutQuantity = @"title,username
+                          titleName,testName";
+
+        //Act
+        var actual = await _csvParser.ParseAsync<Poco>(csvContentWithoutQuantity.ToMemoryStream(), poco => poco.Quantity);
+
+        //Arrange
+        var parsed = actual.First();
+        Assert.Equal(0, parsed.Quantity);
+        Assert.Equal("titleName", parsed.Title);
+        Assert.Equal("testName", parsed.Username);
     }
 
     private class Poco

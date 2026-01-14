@@ -67,6 +67,7 @@ public class CsvParserTests
         
         //Assert
         Assert.True(someStream.CanRead);
+        Assert.Equal(0, someStream.Position);
     }
 
     [Fact(DisplayName = "it should parse valid csv file to POCO")]
@@ -170,7 +171,7 @@ public class CsvParserTests
     }
 
     [Fact(DisplayName = "it should not set POCO properties when specified on parsing")]
-    public async Task DoNotSetProertiesOnParsing()
+    public async Task DoNotSetPropertiesOnParsing()
     {
         //Arrange
         var csvContentWithoutQuantity = @"title,username

@@ -72,7 +72,12 @@ if (app.Environment.IsDevelopment())
 
 //Use section
 app.UseExceptionHandler();
-app.UseHttpsRedirection();
+
+if(!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseCors("AllowCorsoWeb");

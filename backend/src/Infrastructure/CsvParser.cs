@@ -7,56 +7,69 @@ public class CsvParser
 {
     public async Task<ValidationResult> ValidateAsync<T>(Stream stream, params Expression<Func<T, object>>[] doNotValidate)
     {
-        using var reader = new StreamReader(stream, leaveOpen: true);
-        var header = await reader.ReadLineAsync();
-
-        if (string.IsNullOrWhiteSpace(header))
+        if(!stream.CanSeek)
         {
-            return new ValidationResult()
-            {
-                Error = new Error
-                {
-                    Type = ErrorTypes.EmptyHeader,
-                    Message = $"The header is empty."
-                }
-            };
+            throw new InvalidOperationException("Csv parser only support seekable streams!");
         }
 
-        var fieldsFromHeader = header.Split(",", StringSplitOptions.TrimEntries);
-        var givenType = typeof(T);
-        var propertiesFromGivenType = givenType.GetProperties();
-        var missingFields = new List<string>();
-        var doNotValidateNames = GetNames(doNotValidate);
-
-        foreach (var prop in propertiesFromGivenType)
+        try
         {
-            if(doNotValidateNames.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
+            using var reader = new StreamReader(stream, leaveOpen: true);
+            var header = await reader.ReadLineAsync();
+
+            if (string.IsNullOrWhiteSpace(header))
             {
-                continue;
+                return new ValidationResult()
+                {
+                    Error = new Error
+                    {
+                        Type = ErrorTypes.EmptyHeader,
+                        Message = $"The header is empty."
+                    }
+                };
             }
 
-            if (!fieldsFromHeader.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
-            {
-                missingFields.Add(prop.Name.ToLower());
-            }
-        }
+            var fieldsFromHeader = header.Split(",", StringSplitOptions.TrimEntries);
+            var givenType = typeof(T);
+            var propertiesFromGivenType = givenType.GetProperties();
+            var missingFields = new List<string>();
+            var doNotValidateNames = GetNames(doNotValidate);
 
-        if(missingFields.Count > 0)
-        {
+            foreach (var prop in propertiesFromGivenType)
+            {
+                if(doNotValidateNames.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!fieldsFromHeader.Contains(prop.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    missingFields.Add(prop.Name.ToLower());
+                }
+            }
+
+            if(missingFields.Count > 0)
+            {
+                return new ValidationResult()
+                {
+                    Error = new Error
+                    {
+                        Type = ErrorTypes.HeaderDoesNotMatch,
+                        Message = $"The header does not match with provided type: {givenType.Name}, missing fields: {string.Join(", ", missingFields)}."
+                    }
+                };
+            }
+
             return new ValidationResult()
             {
-                Error = new Error
-                {
-                    Type = ErrorTypes.HeaderDoesNotMatch,
-                    Message = $"The header does not match with provided type: {givenType.Name}, missing fields: {string.Join(", ", missingFields)}."
-                }
+                Succeeded = true
             };
         }
-
-        return new ValidationResult()
+        finally
         {
-            Succeeded = true
-        };
+            //Always set stream to the begin for re-read.
+            stream.Seek(0, SeekOrigin.Begin);
+        }
     }
 
     public async Task<IEnumerable<T>> ParseAsync<T>(Stream stream, params Expression<Func<T, object>>[] excludeFromParsing)

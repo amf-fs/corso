@@ -1,12 +1,8 @@
-using System.Diagnostics;
 using CorsoApi.Core;
 using CorsoApi.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CorsoApi.Controllers;
-
-//TODO: secure the controller with authentication
 [ApiController]
 [Route("api/[controller]")]
 [SessionAuthorize]
@@ -89,14 +85,14 @@ public class AccountsController(IAccountsVault vault, CsvParser csvParser) : Con
         }
 
         using var stream =  file.OpenReadStream();
-        var validation = await csvParser.ValidateAsync<Account>(stream);
-
+        var validation = await csvParser.ValidateAsync<Account>(stream, _ => _.Id);
+        
         if(validation.Error is not null)
         {
             return this.BadRequestProblem("File", validation.Error.Message);
         }
 
-        var accounts = await csvParser.ParseAsync<Account>(stream);
+        var accounts = await csvParser.ParseAsync<Account>(stream, _ => _.Id);
         await vault.UnLockAsync();
         
         foreach(var account in accounts)

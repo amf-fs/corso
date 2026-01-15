@@ -24,12 +24,19 @@
         }
     </mat-form-field>
     <div class="flex justify-end gap-2">
-        <button (click)="onNewAccountButtonClick()" mat-button>
-            <mat-icon>add</mat-icon>
-            New account
+      <div class="flex flex-col">
+        <button (click)="fileInput.click()" mat-button>
+          <mat-icon>{{fileName ? 'upload' : 'attach_file'}}</mat-icon>
+          <span>{{fileName ? 'Import ' + fileName : 'You can import a csv file'}}</span>
         </button>
-        <button [disabled]="isFormInvalid()" (click)="onSaveButtonClick()" mat-flat-button>
-            Save
-        </button>
+      </div>
+      <input hidden (change)="onFileSelected($event)" #fileInput type="file" id="file">
+      <button (click)="onNewAccountButtonClick()" mat-button>
+        <mat-icon>add</mat-icon>
+        New account
+      </button>
+      <button [disabled]="isFormInvalid()" (click)="onSaveButtonClick()" mat-flat-button>
+        Save
+      </button>
     </div>
 </div>

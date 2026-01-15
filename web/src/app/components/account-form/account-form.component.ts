@@ -42,8 +42,14 @@ export class AccountFormComponent {
       return this._showPassword;
     }
 
+    private _fileName = '';
+    get fileName() : string {
+      return this._fileName;
+    }
+
     account = input<Account | null>(null);
     accountForm: FormGroup
+
 
     constructor(private readonly formBuilder: FormBuilder) {
         this.accountForm = this.formBuilder.group({
@@ -80,8 +86,16 @@ export class AccountFormComponent {
         this.newAccountClicked.emit();
     }
 
-    onPasswordVisibilityButtonClick(): void{
+    onPasswordVisibilityButtonClick(): void {
       this._showPassword = !this._showPassword;
+    }
+
+    onFileSelected(event: Event): void {
+      const fileInput = event.target as HTMLInputElement;
+
+      if(fileInput.files && fileInput.files.length > 0) {
+        this._fileName = fileInput.files[0].name;
+      }
     }
 
     isFormInvalid(): boolean {

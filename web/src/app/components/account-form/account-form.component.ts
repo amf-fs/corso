@@ -1,10 +1,11 @@
-import { Component, effect, EventEmitter, input, Output } from '@angular/core';
+import { Component, effect, EventEmitter, input, Output, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Account } from '../../app.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-account-form',
@@ -16,6 +17,7 @@ import { Account } from '../../app.model';
         MatIconModule,
         ReactiveFormsModule,
         FormsModule,
+        CommonModule
     ],
     templateUrl: './account-form.component.html',
     styleUrl: './account-form.component.scss'
@@ -42,14 +44,13 @@ export class AccountFormComponent {
       return this._showPassword;
     }
 
-    private _fileName = '';
-    get fileName() : string {
-      return this._fileName;
+    private selectedFile = signal<File | null>(null);
+    get fileName() : string | undefined {
+      return this.selectedFile()?.name;
     }
 
     account = input<Account | null>(null);
     accountForm: FormGroup
-
 
     constructor(private readonly formBuilder: FormBuilder) {
         this.accountForm = this.formBuilder.group({
@@ -59,6 +60,10 @@ export class AccountFormComponent {
         })
 
         this.watchAccountChanges();
+    }
+
+    onDeleteButtonClick(): void {
+      this.selectedFile.set(null);
     }
 
     onSaveButtonClick(): void {
@@ -94,7 +99,7 @@ export class AccountFormComponent {
       const fileInput = event.target as HTMLInputElement;
 
       if(fileInput.files && fileInput.files.length > 0) {
-        this._fileName = fileInput.files[0].name;
+        this.selectedFile.set(fileInput.files[0]);
       }
     }
 

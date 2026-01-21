@@ -54,11 +54,7 @@ export class AccountsComponent {
   }
 
   ngOnInit(): void {
-    this.accountService.getAll()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(accounts => {
-        this.allAccounts.set(accounts);
-      })
+    this.loadAccounts();
   }
 
   onAccountCreated(fromForm: Account) {
@@ -93,5 +89,17 @@ export class AccountsComponent {
 
   onAccountSelectionChange(selectedAccount: Account) {
     this._selectedAccount = selectedAccount
+  }
+
+  onAccountsImported() {
+    this.loadAccounts();
+  }
+
+  private loadAccounts(): void {
+    this.accountService.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(accounts => {
+        this.allAccounts.set(accounts);
+      })
   }
 }

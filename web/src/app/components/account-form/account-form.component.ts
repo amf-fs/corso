@@ -1,11 +1,14 @@
-import { Component, effect, EventEmitter, input, Output, signal } from '@angular/core';
+import { Component, effect, EventEmitter, input, Output, signal, inject, DestroyRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Account } from '../../app.model';
 import { CommonModule } from '@angular/common';
+import { AccountService } from '../../services/account.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
     selector: 'app-account-form',
@@ -15,6 +18,7 @@ import { CommonModule } from '@angular/common';
         MatFormFieldModule,
         MatInputModule,
         MatIconModule,
+        MatSnackBarModule,
         ReactiveFormsModule,
         FormsModule,
         CommonModule
@@ -26,6 +30,7 @@ export class AccountFormComponent {
     @Output() accountCreated = new EventEmitter<Account>();
     @Output() accountUpdated = new EventEmitter<Account>();
     @Output() newAccountClicked = new EventEmitter<void>();
+    @Output() accountsImported = new EventEmitter<void>();
 
     get accountNameControl() {
       return this.accountForm.get('accountName');
@@ -52,7 +57,13 @@ export class AccountFormComponent {
     account = input<Account | null>(null);
     accountForm: FormGroup
 
-    constructor(private readonly formBuilder: FormBuilder) {
+    private readonly destroyRef = inject(DestroyRef);
+
+    constructor(
+        private readonly formBuilder: FormBuilder,
+        private readonly accountService: AccountService,
+        private readonly snackBar: MatSnackBar
+    ) {
         this.accountForm = this.formBuilder.group({
             accountName: ['', Validators.required],
             username: ['', Validators.required],
@@ -64,6 +75,26 @@ export class AccountFormComponent {
 
     onDeleteButtonClick(): void {
       this.selectedFile.set(null);
+    }
+
+    onFileButtonClick(): void {
+      const file = this.selectedFile();
+
+      // If file already selected, import it
+      if (file) {
+        this.accountService.import(file)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.accountsImported.emit();
+              this.selectedFile.set(null);
+            }
+          });
+      } else {
+        // If no file selected, open file picker
+        const fileInput = document.getElementById('file') as HTMLInputElement;
+        fileInput?.click();
+      }
     }
 
     onSaveButtonClick(): void {

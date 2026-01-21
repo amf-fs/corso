@@ -20,8 +20,13 @@ export class AccountService {
     return this.httpClient.post<Account>(this.apiUrl, newAccount, {withCredentials: true});
   }
 
-  update(toUpdate: Account): Observable<never> {
-    return this.httpClient.put<Account>(`${this.apiUrl}/${toUpdate.id}`, toUpdate, {withCredentials: true})
-      .pipe(switchMap(() => EMPTY));
+  update(toUpdate: Account): Observable<void> {
+    return this.httpClient.put<void>(`${this.apiUrl}/${toUpdate.id}`, toUpdate, {withCredentials: true})
+  }
+
+  import(file: File): Observable<void> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.httpClient.post<void>(`${this.apiUrl}/import`, formData, {withCredentials: true});
   }
 }

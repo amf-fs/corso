@@ -27,11 +27,11 @@
       <button *ngIf="fileName" matMiniFab class="account-form__delete-btn" (click)="onDeleteButtonClick()">
         <mat-icon >delete</mat-icon>
       </button>
-      <button (click)="fileInput.click()" mat-button>
+      <button (click)="onFileButtonClick()" mat-button>
         <mat-icon>{{fileName ? 'upload' : 'attach_file'}}</mat-icon>
         <span>{{fileName ? 'Click to import ' + fileName : 'You can import a csv file'}}</span>
       </button>
-      <input hidden (change)="onFileSelected($event)" #fileInput type="file" id="file">
+      <input hidden (change)="onFileSelected($event)" #fileInput type="file" id="file" accept=".csv">
       <button (click)="onNewAccountButtonClick()" mat-button>
         <mat-icon>add</mat-icon>
         New account

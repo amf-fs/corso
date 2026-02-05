@@ -29,7 +29,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class AccountFormComponent {
     @Output() accountCreated = new EventEmitter<Account>();
     @Output() accountUpdated = new EventEmitter<Account>();
-    @Output() accountsImported = new EventEmitter<void>();
 
     get accountNameControl() {
       return this.accountForm.get('accountName');
@@ -46,11 +45,6 @@ export class AccountFormComponent {
     private _showPassword = false;
     get showPassword() : boolean{
       return this._showPassword;
-    }
-
-    private selectedFile = signal<File | null>(null);
-    get fileName() : string | undefined {
-      return this.selectedFile()?.name;
     }
 
     account = input<Account | null>(null);
@@ -70,30 +64,6 @@ export class AccountFormComponent {
         })
 
         this.watchAccountChanges();
-    }
-
-    onDeleteButtonClick(): void {
-      this.selectedFile.set(null);
-    }
-
-    onFileButtonClick(): void {
-      const file = this.selectedFile();
-
-      // If file already selected, import it
-      if (file) {
-        this.accountService.import(file)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: () => {
-              this.accountsImported.emit();
-              this.selectedFile.set(null);
-            }
-          });
-      } else {
-        // If no file selected, open file picker
-        const fileInput = document.getElementById('file') as HTMLInputElement;
-        fileInput?.click();
-      }
     }
 
     onSaveButtonClick(): void {
@@ -118,14 +88,6 @@ export class AccountFormComponent {
 
     onPasswordVisibilityButtonClick(): void {
       this._showPassword = !this._showPassword;
-    }
-
-    onFileSelected(event: Event): void {
-      const fileInput = event.target as HTMLInputElement;
-
-      if(fileInput.files && fileInput.files.length > 0) {
-        this.selectedFile.set(fileInput.files[0]);
-      }
     }
 
     isFormInvalid(): boolean {

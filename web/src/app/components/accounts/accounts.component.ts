@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 import { AccountFormComponent } from '../account-form/account-form.component';
 import { AccountDialogComponent } from '../account-dialog/account-dialog.component';
@@ -28,6 +29,7 @@ import { AccountDialogComponent } from '../account-dialog/account-dialog.compone
     MatListModule,
     MatDividerModule,
     MatDialogModule,
+    CommonModule,
     AccountFormComponent,
     AccountListComponent
   ],
@@ -39,11 +41,16 @@ export class AccountsComponent {
 
   accountForm: FormGroup
   allAccounts = signal<Account[]>([]);
+  selectedFile = signal<File | null>(null);
 
   private _selectedAccount: Account | null = null;
 
   get selectedAccount(): Account | null {
     return this._selectedAccount;
+  }
+
+  get fileName(): string | undefined {
+    return this.selectedFile()?.name;
   }
 
   private readonly destroyRef = inject(DestroyRef);
@@ -108,12 +115,45 @@ export class AccountsComponent {
       .subscribe(newAccount => this.onAccountCreated(newAccount));
   }
 
-  onAccountSelectionChange(selectedAccount: Account) {
-    this._selectedAccount = selectedAccount
+  onFileButtonClick(): void {
+    const file = this.selectedFile();
+
+    // If file already selected, import it
+    if (file) {
+      this.accountService.import(file)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.loadAccounts();
+            this.selectedFile.set(null);
+          }
+        });
+    } else {
+      // If no file selected, open file picker
+      const fileInput = document.getElementById('file') as HTMLInputElement;
+      fileInput?.click();
+    }
   }
 
-  onAccountsImported() {
-    this.loadAccounts();
+  onDeleteButtonClick(): void {
+    this.selectedFile.set(null);
+    // Reset file input so same file can be selected again
+    const fileInput = document.getElementById('file') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const fileInput = event.target as HTMLInputElement;
+
+    if(fileInput.files && fileInput.files.length > 0) {
+      this.selectedFile.set(fileInput.files[0]);
+    }
+  }
+
+  onAccountSelectionChange(selectedAccount: Account) {
+    this._selectedAccount = selectedAccount
   }
 
   private loadAccounts(): void {

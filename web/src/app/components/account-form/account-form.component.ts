@@ -29,7 +29,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class AccountFormComponent {
     @Output() accountCreated = new EventEmitter<Account>();
     @Output() accountUpdated = new EventEmitter<Account>();
-    @Output() newAccountClicked = new EventEmitter<void>();
     @Output() accountsImported = new EventEmitter<void>();
 
     get accountNameControl() {
@@ -115,11 +114,6 @@ export class AccountFormComponent {
         }
 
         this.accountForm.reset();
-    }
-
-    onNewAccountButtonClick() {
-        this.accountForm.reset();
-        this.newAccountClicked.emit();
     }
 
     onPasswordVisibilityButtonClick(): void {

@@ -1,10 +1,19 @@
-<div class="flex flex-row w-full h-screen">
-  <app-account-list class="w-1/2" [accounts]="allAccounts()"
-    (accountSelectionChanged)="onAccountSelectionChange($event)">
-  </app-account-list>
-  <mat-divider [vertical]="true" class="h-full"></mat-divider>
-  <app-account-form class="w-1/2" [account]="selectedAccount" (accountCreated)="onAccountCreated($event)"
-    (accountUpdated)="onAccountUpdated($event)" (newAccountClicked)="onNewAccountClicked()"
-    (accountsImported)="onAccountsImported()">
-  </app-account-form>
+<div class="flex flex-col w-full h-screen">
+  <div class="flex items-center gap-4 px-6 py-4">
+    <div class="flex-1"></div>
+    <button mat-flat-button color="primary" (click)="openNewAccountDialog()">
+      <mat-icon>add</mat-icon>
+      New account
+    </button>
+  </div>
+
+  <div class="flex flex-row flex-1">
+    <app-account-list class="w-1/2" [accounts]="allAccounts()"
+      (accountSelectionChanged)="onAccountSelectionChange($event)">
+    </app-account-list>
+    <mat-divider [vertical]="true" class="h-full"></mat-divider>
+    <app-account-form class="w-1/2" [account]="selectedAccount" (accountCreated)="onAccountCreated($event)"
+      (accountUpdated)="onAccountUpdated($event)" (accountsImported)="onAccountsImported()">
+    </app-account-form>
+  </div>
 </div>

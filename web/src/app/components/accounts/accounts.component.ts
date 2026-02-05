@@ -5,11 +5,15 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { AccountService } from '../../services/account.service';
 import { AccountListComponent } from '../account-list/account-list.component';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/material/form-field';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { filter } from 'rxjs';
 import { AccountFormComponent } from '../account-form/account-form.component';
+import { AccountDialogComponent } from '../account-dialog/account-dialog.component';
 
 @Component({
   selector: 'app-accounts',
@@ -22,6 +26,8 @@ import { AccountFormComponent } from '../account-form/account-form.component';
     ReactiveFormsModule,
     FormsModule,
     MatListModule,
+    MatDividerModule,
+    MatDialogModule,
     AccountFormComponent,
     AccountListComponent
   ],
@@ -44,7 +50,8 @@ export class AccountsComponent {
 
   constructor(
     private readonly formBuilder: FormBuilder,
-    private readonly accountService: AccountService
+    private readonly accountService: AccountService,
+    private readonly dialog: MatDialog
   ) {
     this.accountForm = this.formBuilder.group({
       accountName: ['', Validators.required],
@@ -85,6 +92,20 @@ export class AccountsComponent {
   onNewAccountClicked() {
     this.accountList.clearSelection();
     this._selectedAccount = null;
+  }
+
+  openNewAccountDialog(): void {
+    const dialogRef = this.dialog.open(AccountDialogComponent, {
+      width: '480px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed()
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter((result): result is Account => !!result)
+      )
+      .subscribe(newAccount => this.onAccountCreated(newAccount));
   }
 
   onAccountSelectionChange(selectedAccount: Account) {

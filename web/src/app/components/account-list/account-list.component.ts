@@ -1,10 +1,15 @@
-import { Component, computed, EventEmitter, input, Output, signal, ViewChild } from '@angular/core';
+import { Component, computed, DestroyRef, EventEmitter, inject, input, Output, signal } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Account } from '../../app.model';
-import { MatListModule, MatSelectionList } from '@angular/material/list';
-import { FormsModule } from '@angular/forms';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AccountDialogComponent } from '../account-dialog/account-dialog.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-account-list',
@@ -14,31 +19,43 @@ import { FormsModule } from '@angular/forms';
     MatInputModule,
     MatIconModule,
     MatListModule,
-    FormsModule
+    MatDividerModule,
+    MatDialogModule,
+    MatButtonModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.scss'
 })
 export class AccountListComponent {
-  @ViewChild(MatSelectionList) selectionList!: MatSelectionList;
   @Output() accountSelectionChanged = new EventEmitter<Account>();
+  @Output() accountUpdated = new EventEmitter<Account>();
 
   filteredAccounts = computed(() => (this.filterBySearchTerm()));
-  selectedAccounts: Account[] = [];
   accounts = input<Account[]>([])
 
   private readonly searchTerm = signal<string>('');
-  
+  private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
+
   onSearchInput({ target }: Event): void {
     this.searchTerm.set((target as HTMLInputElement).value);
   }
 
-  onAccountListSelectionChange(): void {
-    this.accountSelectionChanged.emit(this.selectedAccounts[0]);
-  }
+  onEditButtonClick(account: Account, event: Event): void {
+    event.stopPropagation();
 
-  clearSelection(): void {
-    this.selectionList.deselectAll();
+    const dialogRef = this.dialog.open(AccountDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: account
+    });
+
+    dialogRef.afterClosed()
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter((result): result is Account => !!result)
+      )
+      .subscribe(updatedAccount => this.accountUpdated.emit(updatedAccount));
   }
 
   private filterBySearchTerm(): Account[] {

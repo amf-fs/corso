@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, Inject, Optional } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -25,16 +25,28 @@ import { Account } from '../../app.model';
 export class AccountDialogComponent {
   accountForm: FormGroup;
   showPassword = false;
+  editingAccount: Account | null = null;
 
   constructor(
     private readonly dialogRef: MatDialogRef<AccountDialogComponent>,
-    private readonly formBuilder: FormBuilder
+    private readonly formBuilder: FormBuilder,
+    @Optional() @Inject(MAT_DIALOG_DATA) data?: Account
   ) {
+    this.editingAccount = data || null;
+
     this.accountForm = this.formBuilder.group({
       accountName: ['', Validators.required],
       username: ['', Validators.required],
       password: ['', Validators.required]
     });
+
+    if (this.editingAccount) {
+      this.accountForm.patchValue({
+        accountName: this.editingAccount.name,
+        username: this.editingAccount.username,
+        password: this.editingAccount.password
+      });
+    }
   }
 
   get accountNameControl() {
@@ -63,12 +75,17 @@ export class AccountDialogComponent {
       return;
     }
 
-    const newAccount: Account = {
+    const account: Account = {
       name: this.accountNameControl?.value as string,
       username: this.usernameControl?.value as string,
       password: this.passwordControl?.value as string
     };
 
-    this.dialogRef.close(newAccount);
+    // If editing, preserve the ID
+    if (this.editingAccount?.id) {
+      account.id = this.editingAccount.id;
+    }
+
+    this.dialogRef.close(account);
   }
 }

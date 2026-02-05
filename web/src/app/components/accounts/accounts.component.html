@@ -17,7 +17,8 @@
 
   <div class="flex flex-row flex-1">
     <app-account-list class="w-1/2" [accounts]="allAccounts()"
-      (accountSelectionChanged)="onAccountSelectionChange($event)">
+      (accountSelectionChanged)="onAccountSelectionChange($event)"
+      (accountUpdated)="onAccountUpdated($event)">
     </app-account-list>
     <mat-divider [vertical]="true" class="h-full"></mat-divider>
     <app-account-form class="w-1/2" [account]="selectedAccount" (accountCreated)="onAccountCreated($event)"

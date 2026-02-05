@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal, ViewChild } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Account } from '../../app.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -37,8 +37,6 @@ import { AccountDialogComponent } from '../account-dialog/account-dialog.compone
   styleUrl: './accounts.component.scss'
 })
 export class AccountsComponent {
-  @ViewChild(AccountListComponent) accountList!: AccountListComponent;
-
   accountForm: FormGroup
   allAccounts = signal<Account[]>([]);
   selectedFile = signal<File | null>(null);
@@ -77,7 +75,6 @@ export class AccountsComponent {
       .subscribe(newAccount => {
         this.allAccounts.update(accounts => [...accounts, newAccount]);
         this._selectedAccount = null;
-        this.accountList.clearSelection();
       });
   }
 
@@ -91,13 +88,11 @@ export class AccountsComponent {
           )
         );
 
-        this.accountList.clearSelection();
         this._selectedAccount = null;
       }})
   }
 
   onNewAccountClicked() {
-    this.accountList.clearSelection();
     this._selectedAccount = null;
   }
 

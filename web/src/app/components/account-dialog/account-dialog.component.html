@@ -1,4 +1,10 @@
-<h2 mat-dialog-title>New account</h2>
+<h2 mat-dialog-title>
+  @if (editingAccount) {
+    Editing {{ editingAccount.name }}
+  } @else {
+    New account
+  }
+</h2>
 <mat-dialog-content>
   <form [formGroup]="accountForm" class="flex flex-col gap-4">
     <mat-form-field>

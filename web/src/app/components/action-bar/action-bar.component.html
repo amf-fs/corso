@@ -1,0 +1,15 @@
+<div class="flex items-center gap-4 px-6 py-4 w-full">
+  <div class="flex-1"></div>
+  <button *ngIf="fileName" mat-icon-button class="action-bar__delete-btn" (click)="onDeleteButtonClick()">
+    <mat-icon>delete</mat-icon>
+  </button>
+  <button mat-flat-button color="accent" (click)="onFileButtonClick()">
+    <mat-icon>{{fileName ? 'upload' : 'attach_file'}}</mat-icon>
+    <span>{{fileName ? 'Click to import ' + fileName : 'Import csv'}}</span>
+  </button>
+  <input hidden (change)="onFileSelected($event)" #fileInput type="file" id="file" accept=".csv">
+  <button mat-flat-button color="primary" (click)="onNewAccountClick()">
+    <mat-icon>add</mat-icon>
+    Account
+  </button>
+</div>

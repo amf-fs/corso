@@ -1,21 +1,10 @@
 <div class="flex flex-col w-full h-screen">
-  <div class="flex items-center gap-4 px-6 py-4">
-    <div class="flex-1"></div>
-    <button *ngIf="fileName" mat-icon-button class="accounts__delete-btn" (click)="onDeleteButtonClick()">
-      <mat-icon>delete</mat-icon>
-    </button>
-    <button mat-flat-button color="accent" (click)="onFileButtonClick()">
-      <mat-icon>{{fileName ? 'upload' : 'attach_file'}}</mat-icon>
-      <span>{{fileName ? 'Click to import ' + fileName : 'Import csv'}}</span>
-    </button>
-    <input hidden (change)="onFileSelected($event)" #fileInput type="file" id="file" accept=".csv">
-    <button mat-flat-button color="primary" (click)="openAccountDialog()">
-      <mat-icon>add</mat-icon>
-      Account
-    </button>
-  </div>
+  <app-action-bar
+    (newAccountCreated)="onNewAccountCreated($event)"
+    (fileImported)="onFileImported()">
+  </app-action-bar>
 
-  <div class="flex flex-row flex-1">
+  <div class="flex flex-row">
     <app-account-list class="w-full" [accounts]="allAccounts()"
       (accountUpdated)="onAccountUpdated($event)">
     </app-account-list>

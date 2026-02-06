@@ -67,9 +67,10 @@ export class AccountsComponent {
       }})
   }
 
-  openNewAccountDialog(): void {
+  openAccountDialog(): void {
     const dialogRef = this.dialog.open(AccountDialogComponent, {
-      width: '480px',
+      width: '90vw',
+      maxWidth: '480px',
       disableClose: true
     });
 

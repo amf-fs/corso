@@ -44,7 +44,8 @@ export class AccountListComponent {
     event.stopPropagation();
 
     const dialogRef = this.dialog.open(AccountDialogComponent, {
-      width: '480px',
+      width: '90vw',
+      maxWidth: '480px',
       disableClose: true,
       data: account
     });

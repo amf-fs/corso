@@ -9,7 +9,7 @@
       <span>{{fileName ? 'Click to import ' + fileName : 'Import csv'}}</span>
     </button>
     <input hidden (change)="onFileSelected($event)" #fileInput type="file" id="file" accept=".csv">
-    <button mat-flat-button color="primary" (click)="openNewAccountDialog()">
+    <button mat-flat-button color="primary" (click)="openAccountDialog()">
       <mat-icon>add</mat-icon>
       Account
     </button>

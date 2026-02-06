@@ -1,19 +1,15 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Account } from '../../app.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AccountService } from '../../services/account.service';
 import { AccountListComponent } from '../account-list/account-list.component';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
-import { AccountFormComponent } from '../account-form/account-form.component';
 import { AccountDialogComponent } from '../account-dialog/account-dialog.component';
 
 @Component({
@@ -21,31 +17,19 @@ import { AccountDialogComponent } from '../account-dialog/account-dialog.compone
   standalone: true,
   imports: [
     MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatIconModule,
-    ReactiveFormsModule,
-    FormsModule,
     MatListModule,
     MatDividerModule,
     MatDialogModule,
     CommonModule,
-    AccountFormComponent,
     AccountListComponent
   ],
   templateUrl: './accounts.component.html',
   styleUrl: './accounts.component.scss'
 })
 export class AccountsComponent {
-  accountForm: FormGroup
   allAccounts = signal<Account[]>([]);
   selectedFile = signal<File | null>(null);
-
-  private _selectedAccount: Account | null = null;
-
-  get selectedAccount(): Account | null {
-    return this._selectedAccount;
-  }
 
   get fileName(): string | undefined {
     return this.selectedFile()?.name;
@@ -54,27 +38,20 @@ export class AccountsComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   constructor(
-    private readonly formBuilder: FormBuilder,
     private readonly accountService: AccountService,
     private readonly dialog: MatDialog
   ) {
-    this.accountForm = this.formBuilder.group({
-      accountName: ['', Validators.required],
-      username: ['', Validators.required],
-      password: ['', Validators.required],
-    })
   }
 
   ngOnInit(): void {
     this.loadAccounts();
   }
 
-  onAccountCreated(fromForm: Account) {
-    this.accountService.add(fromForm)
+  onAccountCreated(newAccount: Account) {
+    this.accountService.add(newAccount)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(newAccount => {
-        this.allAccounts.update(accounts => [...accounts, newAccount]);
-        this._selectedAccount = null;
+      .subscribe(createdAccount => {
+        this.allAccounts.update(accounts => [...accounts, createdAccount]);
       });
   }
 
@@ -87,13 +64,7 @@ export class AccountsComponent {
             account.id === updatedAccount.id ? updatedAccount : account
           )
         );
-
-        this._selectedAccount = null;
       }})
-  }
-
-  onNewAccountClicked() {
-    this._selectedAccount = null;
   }
 
   openNewAccountDialog(): void {
@@ -107,7 +78,13 @@ export class AccountsComponent {
         takeUntilDestroyed(this.destroyRef),
         filter((result): result is Account => !!result)
       )
-      .subscribe(newAccount => this.onAccountCreated(newAccount));
+      .subscribe(account => {
+        if (!account.id) {
+          this.onAccountCreated(account);
+        } else {
+          this.onAccountUpdated(account);
+        }
+      });
   }
 
   onFileButtonClick(): void {
@@ -145,10 +122,6 @@ export class AccountsComponent {
     if(fileInput.files && fileInput.files.length > 0) {
       this.selectedFile.set(fileInput.files[0]);
     }
-  }
-
-  onAccountSelectionChange(selectedAccount: Account) {
-    this._selectedAccount = selectedAccount
   }
 
   private loadAccounts(): void {

@@ -27,7 +27,6 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrl: './account-list.component.scss'
 })
 export class AccountListComponent {
-  @Output() accountSelectionChanged = new EventEmitter<Account>();
   @Output() accountUpdated = new EventEmitter<Account>();
 
   filteredAccounts = computed(() => (this.filterBySearchTerm()));

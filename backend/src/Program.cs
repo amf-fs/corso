@@ -2,6 +2,12 @@ using CorsoApi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure logging from configuration so environment variables (e.g. on Azure App Service)
+// can control minimum log levels using the Logging:LogLevel section (Logging__LogLevel__Default).
+builder.Logging.ClearProviders();
+builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+builder.Logging.AddConsole();
+
 //Infrastructure services
 builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 {

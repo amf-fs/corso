@@ -24,7 +24,7 @@ jobs:
           node-version: '24.x'
 
       - name: Install Angular dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./web
       
       - name: Build Angular app

@@ -11,6 +11,9 @@
             <div matListItemTitle class="truncate">{{ account.name }}</div>
             <div matListItemLine>{{account.username}}</div>
             <div matListItemMeta class="pt-3">
+              <button mat-icon-button aria-label="Copy password" (click)="onCopyPasswordButtonClick(account, $event)">
+                <mat-icon>content_copy</mat-icon>
+              </button>
               <button mat-icon-button (click)="onEditButtonClick(account, $event)">
                 <mat-icon>edit</mat-icon>
               </button>

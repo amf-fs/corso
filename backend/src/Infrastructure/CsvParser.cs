@@ -84,11 +84,10 @@ public class CsvParser
         List<T> parsedItems = []; 
         //starts at 2 because of header.
         var lineNumber = 2;
-        while(!reader.EndOfStream)
-        {
-            var line = await reader.ReadLineAsync()
-                ?? throw new InvalidOperationException($"Csv line {lineNumber} is empty.");
+        string? line;
 
+        while((line = await reader.ReadLineAsync()) is not null)
+        {
             var parsed = ParseItem<T>(indexesFromType, line, lineNumber);
             parsedItems.Add(parsed);
             lineNumber++;

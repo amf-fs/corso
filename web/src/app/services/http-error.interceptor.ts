@@ -1,12 +1,12 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { EMPTY } from 'rxjs';
+import { MessageService } from './message.service';
 
 export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
-  const snackBar = inject(MatSnackBar);
+  const messageService = inject(MessageService);
   const router = inject(Router);
 
   return next(req).pipe(
@@ -23,7 +23,7 @@ export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/master-password']);
       }
 
-      snackBar.open(errorMessage, 'Close', { duration: 3000, verticalPosition: 'top' });
+      messageService.error(errorMessage);
 
       return EMPTY;
     })

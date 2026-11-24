@@ -10,8 +10,8 @@ import { AccountDialogComponent } from '../account-dialog/account-dialog.compone
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { MessageService } from '../../services/message.service';
 
 @Component({
   selector: 'app-account-list',
@@ -38,7 +38,7 @@ export class AccountListComponent {
   private readonly dialog = inject(MatDialog);
   private readonly clipboard = inject(Clipboard);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly messageService = inject(MessageService);
 
   onSearchInput({ target }: Event): void {
     this.searchTerm.set((target as HTMLInputElement).value);
@@ -66,11 +66,11 @@ export class AccountListComponent {
     event.stopPropagation();
 
     const copied = this.clipboard.copy(account.password);
-    const message = copied
-      ? 'Password copied to clipboard.'
-      : 'Could not copy to clipboard. Please try again.';
-
-    this.snackBar.open(message, 'Close', { duration: 3000, verticalPosition: 'top' });
+    if (copied) {
+      this.messageService.success('Password copied to clipboard.');
+    } else {
+      this.messageService.error('Could not copy to clipboard. Please try again.');
+    }
   }
 
   private filterBySearchTerm(): Account[] {

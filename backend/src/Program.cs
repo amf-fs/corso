@@ -51,7 +51,7 @@ builder.Services.AddSession(options =>
 {
     options.Cookie.Name = ".Corso.Session";
     //TODO: Implement hard limit.
-    options.IdleTimeout = TimeSpan.FromMinutes(1);
+    options.IdleTimeout = TimeSpan.FromMinutes(15);
     options.Cookie.HttpOnly = true;           // XSS protection javascript cannot access
     options.Cookie.IsEssential = true;        // Essential to app
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;  //HTTPS only

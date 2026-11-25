@@ -1,4 +1,5 @@
 using CorsoApi.Infrastructure;
+using OllamaSharp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
 builder.Logging.AddConsole();
+
+// Add services to the container.
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = true;
+});
+
 
 //Infrastructure services
 builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
@@ -19,19 +34,7 @@ builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 builder.Services.AddScoped<IHasher, Argon2Hasher>();
 builder.Services.AddScoped<CsvParser>();
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
-builder.Services.AddProblemDetails();
-
-builder.Services.Configure<RouteOptions>(options =>
-{
-    options.LowercaseUrls = true;
-    options.LowercaseQueryStrings = true;
-});
+builder.Services.AddChatClient(new OllamaApiClient("http://localhost:11434", "llama3.2"));
 
 // Add CORS
 builder.Services.AddCors(options =>

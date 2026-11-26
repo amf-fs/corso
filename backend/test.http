@@ -1,0 +1,30 @@
+@baseUrl = https://localhost:7245
+
+# REST Client remembers Set-Cookie by default and sends .Corso.Session to later
+# requests for this same origin. Run the authorization request before protected requests.
+
+###
+# @name authorize
+# @prompt password Enter the Corso master password
+POST {{baseUrl}}/api/authorizations
+Content-Type: application/json
+Accept: application/json
+
+{
+  "masterPassword": "{{password}}"
+}
+
+###
+# @name getAccounts
+GET {{baseUrl}}/api/accounts
+Accept: application/json
+
+###
+# @name chat
+POST {{baseUrl}}/api/chat
+Content-Type: application/json
+Accept: text/plain
+
+{
+  "prompt": "Recommendations"
+}

@@ -10,8 +10,7 @@ namespace CorsoApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-//TODO: enable once done.
-//[SessionAuthorize]
+[SessionAuthorize]
 public class ChatController : ControllerBase
 {
     [HttpPost]

@@ -16,6 +16,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
+builder.Services.AddMemoryCache();
+builder.Services
+    .AddOptions<ChatHistoryCacheOptions>()
+    .Bind(builder.Configuration.GetSection(ChatHistoryCacheOptions.SectionName))
+    .Validate(options => options.MaxMessages > 0, "Chat history MaxMessages must be greater than zero.")
+    .Validate(options => options.SlidingExpiration > TimeSpan.Zero, "Chat history SlidingExpiration must be greater than zero.")
+    .ValidateOnStart();
 builder.Services.Configure<RouteOptions>(options =>
 {
     options.LowercaseUrls = true;
@@ -31,6 +38,7 @@ builder.Services.AddSingleton<IAccountsVault, AccountsVault>(opts =>
 
     return new AccountsVault("db.dat", masterHash);
 });
+builder.Services.AddSingleton<IChatHistoryStore, MemoryChatHistoryStore>();
 builder.Services.AddScoped<IHasher, Argon2Hasher>();
 builder.Services.AddScoped<CsvParser>();
 

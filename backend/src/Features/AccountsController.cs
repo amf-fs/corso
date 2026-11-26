@@ -2,7 +2,7 @@ using CorsoApi.Core;
 using CorsoApi.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CorsoApi.Controllers;
+namespace CorsoApi.Features;
 [ApiController]
 [Route("api/[controller]")]
 [SessionAuthorize]

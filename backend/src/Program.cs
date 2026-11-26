@@ -1,4 +1,5 @@
 using CorsoApi.Infrastructure;
+using CorsoApi.Features.Chat;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
 
@@ -18,6 +19,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ChatService>();
 
 builder.Services
     .AddOptions<ChatHistoryCacheOptions>()

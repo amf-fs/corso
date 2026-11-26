@@ -26,5 +26,5 @@ Content-Type: application/json
 Accept: text/plain
 
 {
-  "prompt": "Recommendations"
+  "prompt": "Summarize what's accounts in Corso"
 }
